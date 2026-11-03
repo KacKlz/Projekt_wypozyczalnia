@@ -176,3 +176,31 @@ body {
     margin-bottom: 1.25rem;
     text-align: center;
 }
+
+.header-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-greeting {
+    font-size: 0.9rem;
+    color: #cbd5e1;
+}
+
+.btn-header {
+    padding: 0.55rem 1.25rem;
+    background: #3b82f6;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-header:hover {
+    background: #2563eb;
+}
