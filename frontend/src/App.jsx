@@ -49,7 +49,7 @@ function App() {
 
     return (
         <div className="app">
-            <Header />
+            <Header user={user} onLogout={handleLogout} />
 
             <Routes>
                 {/* Strona glowna */}
