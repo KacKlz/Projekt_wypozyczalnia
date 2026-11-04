@@ -42,33 +42,17 @@ function App() {
 
     return (
         <div className="app">
-            <Header />
+            <Header user={user} onLogout={handleLogout} />
 
-            {user ? (
-                <div className="main-content">
-                    <div className="form-box" style={{ textAlign: 'center' }}>
-                        <h2>Hello, {user.imie || 'User'}!</h2>
-                        <p style={{ margin: '1rem 0', color: '#94a3b8' }}>
-                            Your role: <strong style={{ color: user.role === 'admin' ? '#3b82f6' : '#10b981' }}>{user.role}</strong>
-                        </p>
-                        <button className="btn-primary" onClick={handleLogout}>
-                            Log out
-                        </button>
-                    </div>
-                </div>
+            {user ? null : view === 'login' ? (
+                <Login
+                    onSwitchToRegister={() => setView('register')}
+                    onLoginSuccess={handleLoginSuccess}
+                />
             ) : (
-                <>
-                    {view === 'login' ? (
-                        <Login 
-                            onSwitchToRegister={() => setView('register')}
-                            onLoginSuccess={handleLoginSuccess}
-                        />
-                    ) : (
-                        <Register 
-                            onSwitchToLogin={() => setView('login')}
-                        />
-                    )}
-                </>
+                <Register
+                    onSwitchToLogin={() => setView('login')}
+                />
             )}
         </div>
     );
