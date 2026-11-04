@@ -4,11 +4,10 @@ import Login from './Login';
 import Register from './Register';
 
 function App() {
-    const [view, setView] = useState('login');
+    const [view, setView] = useState('home');
     const [user, setUser] = useState(null);
     const [isCheckingSession, setIsCheckingSession] = useState(true);
 
-    // After a page refresh, ask the backend who is logged in (based on the session cookie)
     useEffect(() => {
         fetch('/api/auth/me')
             .then((response) => (response.ok ? response.json() : null))
@@ -19,30 +18,29 @@ function App() {
 
     const handleLoginSuccess = (userData) => {
         setUser(userData);
+        setView('home');
     };
 
     const handleLogout = async () => {
         try {
-            // Remove the session cookie on the backend
             await fetch('/api/auth/logout', { method: 'POST' });
         } catch {
-            // Log out in the app even if the server cannot be reached
+            
         }
         setUser(null);
     };
 
-    // Wait for the session check, so the login form does not flash for a logged-in user
     if (isCheckingSession) {
         return (
             <div className="app">
-                <Header />
+                <Header onNavigate={setView} />
             </div>
         );
     }
 
     return (
         <div className="app">
-            <Header />
+            <Header onNavigate={setView} />
 
             {user ? (
                 <div className="main-content">
@@ -58,12 +56,25 @@ function App() {
                 </div>
             ) : (
                 <>
-                    {view === 'login' ? (
+                    {view === 'home' && (
+                        <div className="main-content">
+                            <div className="form-box" style={{ textAlign: 'center' }}>
+                                <h2>Welcome to Cars-rent.pl</h2>
+                                <p style={{ margin: '1rem 0', color: '#94a3b8' }}>
+                                    Rent your dream car today. Sign in or sign up to access the fleet.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {view === 'login' && (
                         <Login 
                             onSwitchToRegister={() => setView('register')}
                             onLoginSuccess={handleLoginSuccess}
                         />
-                    ) : (
+                    )}
+
+                    {view === 'register' && (
                         <Register 
                             onSwitchToLogin={() => setView('login')}
                         />
