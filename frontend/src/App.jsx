@@ -1,17 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, Link, useNavigate } from 'react-router';
-
 import Header from './Header';
 import Login from './Login';
 import Register from './Register';
 
 function App() {
-    const navigate = useNavigate();
-
+    const [view, setView] = useState('login');
     const [user, setUser] = useState(null);
     const [isCheckingSession, setIsCheckingSession] = useState(true);
 
-    // Sprawdzenie sesji po odswiezeniu strony
+    // After a page refresh, ask the backend who is logged in (based on the session cookie)
     useEffect(() => {
         fetch('/api/auth/me')
             .then((response) => (response.ok ? response.json() : null))
@@ -20,25 +17,21 @@ function App() {
             .finally(() => setIsCheckingSession(false));
     }, []);
 
-    // Pomyslne logowanie
     const handleLoginSuccess = (userData) => {
         setUser(userData);
-        navigate('/');
     };
 
-    // Wylogowanie
     const handleLogout = async () => {
         try {
+            // Remove the session cookie on the backend
             await fetch('/api/auth/logout', { method: 'POST' });
         } catch {
-            // Wylogowanie lokalne nawet przy bledzie serwera
+            // Log out in the app even if the server cannot be reached
         }
-
         setUser(null);
-        navigate('/login');
     };
 
-    // Oczekiwanie na sprawdzenie sesji
+    // Wait for the session check, so the login form does not flash for a logged-in user
     if (isCheckingSession) {
         return (
             <div className="app">
@@ -51,69 +44,16 @@ function App() {
         <div className="app">
             <Header user={user} onLogout={handleLogout} />
 
-            <Routes>
-                {/* Strona glowna */}
-                <Route
-                    path="/"
-                    element={
-                        user ? (
-                            <div className="main-content">
-                                <div className="form-box" style={{ textAlign: 'center' }}>
-                                    <h2>Hello, {user.imie || 'User'}!</h2>
-
-                                    <p style={{ margin: '1rem 0', color: '#94a3b8' }}>
-                                        Your role: <strong>{user.role}</strong>
-                                    </p>
-
-                                    <button
-                                        className="btn-primary"
-                                        onClick={handleLogout}
-                                    >
-                                        Log out
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <Navigate to="/login" replace />
-                        )
-                    }
+            {user ? null : view === 'login' ? (
+                <Login
+                    onSwitchToRegister={() => setView('register')}
+                    onLoginSuccess={handleLoginSuccess}
                 />
-
-                {/* Logowanie */}
-                <Route
-                    path="/login"
-                    element={
-                        user ? (
-                            <Navigate to="/" replace />
-                        ) : (
-                            <Login
-                                onSwitchToRegister={() => navigate('/register')}
-                                onLoginSuccess={handleLoginSuccess}
-                            />
-                        )
-                    }
+            ) : (
+                <Register
+                    onSwitchToLogin={() => setView('login')}
                 />
-
-                {/* Rejestracja */}
-                <Route
-                    path="/register"
-                    element={
-                        user ? (
-                            <Navigate to="/" replace />
-                        ) : (
-                            <Register
-                                onSwitchToLogin={() => navigate('/login')}
-                            />
-                        )
-                    }
-                />
-
-                {/* Nieznany adres */}
-                <Route
-                    path="*"
-                    element={<Navigate to="/" replace />}
-                />
-            </Routes>
+            )}
         </div>
     );
 }
