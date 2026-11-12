@@ -4,6 +4,7 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router';
 import Header from './Header';
 import Login from './Login';
 import Register from './Register';
+import Home from './layout/home/Home';
 
 function App() {
     const navigate = useNavigate();
@@ -57,15 +58,7 @@ function App() {
                     path="/"
                     element={
                         user ? (
-                            <div className="main-content">
-                                <div className="form-box" style={{ textAlign: 'center' }}>
-                                    <h2>Hello, {user.imie || 'User'}!</h2>
-
-                                    <p style={{ margin: '1rem 0', color: '#94a3b8' }}>
-                                        Your role: <strong>{user.role}</strong>
-                                    </p>
-                                </div>
-                            </div>
+                            <Home />
                         ) : (
                             <Navigate to="/login" replace />
                         )
