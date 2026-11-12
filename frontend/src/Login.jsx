@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { validateEmail } from './validation';
+import banner2 from './assets/banner2.webp';
 
 function Login({ onSwitchToRegister, onLoginSuccess }) {
     const [email, setEmail] = useState('');
@@ -49,47 +50,59 @@ function Login({ onSwitchToRegister, onLoginSuccess }) {
 
     return (
         <div className="main-content">
-            <div className="form-box">
-                <div className="form-header">
-                    <h2>Sign In</h2>
-                    <p>Enter your details to access the fleet</p>
+            <div className="login-container">
+                <div className="login-banner-card">
+                    <img 
+                        src={banner2} 
+                        alt="Baner - stwórz konto" 
+                        className="login-banner-img" 
+                        onClick={onSwitchToRegister}
+                        title="Przejdź do rejestracji"
+                    />
                 </div>
 
-                {message && (
-                    <div className={message.type === 'error' ? 'message-error' : 'message-success'}>
-                        {message.text}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit}>
-                    <div className="form-field">
-                        <label>Email Address</label>
-                        <input 
-                            type="email" 
-                            placeholder="userEmail@example.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                        />
+                <div className="form-box">
+                    <div className="form-header">
+                        <h2>Sign In</h2>
+                        <p>Enter your details to access the fleet</p>
                     </div>
 
-                    <div className="form-field">
-                        <label>Password</label>
-                        <input 
-                            type="password" 
-                            placeholder="******"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
+                    {message && (
+                        <div className={message.type === 'error' ? 'message-error' : 'message-success'}>
+                            {message.text}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit}>
+                        <div className="form-field">
+                            <label>Email Address</label>
+                            <input 
+                                type="email" 
+                                placeholder="userEmail@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="form-field">
+                            <label>Password</label>
+                            <input 
+                                type="password" 
+                                placeholder="******"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </div>
+
+                        <button type="submit" className="btn-primary">Sign In</button>
+                    </form>
+
+                    <div className="form-footer">
+                        <span>Don't have an account? </span>
+                        <button type="button" className="btn-link" onClick={onSwitchToRegister}>
+                            Sign Up
+                        </button>
                     </div>
-
-                    <button type="submit" className="btn-primary">Sign In</button>
-                </form>
-
-                <div className="form-footer">
-                    <span>Don't have an account? </span>
-                    <button type="button" className="btn-link" onClick={onSwitchToRegister}>
-                        Sign Up
-                    </button>
                 </div>
             </div>
         </div>
