@@ -17,6 +17,11 @@ function Header({ user, onLogout }) {
                 <Link to="/" className="nav-link">
                     Home
                 </Link>
+                {user && user.role === 'admin' && (
+                    <Link to="/admin" className="nav-link">
+                        Admin panel
+                    </Link>
+                )}
                 {!user && (
                     <>
                         <Link to="/login" className="nav-link">
