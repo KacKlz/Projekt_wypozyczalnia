@@ -5,6 +5,7 @@ import Header from './Header';
 import Login from './Login';
 import Register from './Register';
 import Home from './layout/home/Home';
+import AdminPanel from './layout/admin/AdminPanel';
 
 function App() {
     const navigate = useNavigate();
@@ -90,6 +91,18 @@ function App() {
                             <Register
                                 onSwitchToLogin={() => navigate('/login')}
                             />
+                        )
+                    }
+                />
+
+                {/* Admin panel - only for admins */}
+                <Route
+                    path="/admin"
+                    element={
+                        user && user.role === 'admin' ? (
+                            <AdminPanel />
+                        ) : (
+                            <Navigate to="/" replace />
                         )
                     }
                 />
