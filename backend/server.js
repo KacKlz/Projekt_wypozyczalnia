@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const dns = require("dns");
 const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/auth");
+const adminCarsRoutes = require("./routes/adminCars");
 
 require("dotenv").config();
 
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin/cars", adminCarsRoutes);
 
 if (!process.env.MONGO_URI) {
     console.error("Blad: brak MONGO_URI w pliku .env");
