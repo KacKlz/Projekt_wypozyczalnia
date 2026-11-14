@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import logoImage from './assets/CarLogo.png';
 
+
 function Header({ user, onLogout }) {
     return (
         <header className="header-bar">
@@ -17,6 +18,11 @@ function Header({ user, onLogout }) {
                 <Link to="/" className="nav-link">
                     Home
                 </Link>
+
+                <Link to="/fleet" className="nav-link">
+                    Our fleet
+                </Link>
+
                 {!user && (
                     <>
                         <Link to="/login" className="nav-link">

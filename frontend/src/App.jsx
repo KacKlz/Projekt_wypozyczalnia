@@ -5,6 +5,7 @@ import Header from './Header';
 import Login from './Login';
 import Register from './Register';
 import Home from './layout/home/Home';
+import Fleet from './layout/fleet/Fleet';
 
 function App() {
     const navigate = useNavigate();
@@ -93,6 +94,9 @@ function App() {
                         )
                     }
                 />
+
+                {/* Flota */}
+                <Route path="/fleet" element={<Fleet />} />
 
                 {/* Nieznany adres */}
                 <Route
