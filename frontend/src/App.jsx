@@ -5,11 +5,11 @@ import Header from './Header';
 import Login from './Login';
 import Register from './Register';
 import Home from './layout/home/Home';
-import Fleet from './layout/fleet/Fleet';
-import About from './layout/about/About';
-import Contact from './layout/contact/Contact';
-import Booking from './layout/booking/Booking';
-import MyBookings from './layout/myBookings/MyBookings';
+import Fleet from './layout/pages/Fleet';
+import About from './layout/pages/About';
+import Contact from './layout/pages/Contact';
+import Booking from './layout/pages/Booking';
+import MyBookings from './layout/pages/MyBookings';
 
 function App() {
     const navigate = useNavigate();
