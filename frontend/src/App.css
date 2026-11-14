@@ -33,11 +33,11 @@ body {
 .logo-container {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1.25rem;
 }
 
 .logo-image {
-    height: 100px;
+    height: 64px;
     width: auto;
     object-fit: contain;
     border-radius: 50%;
@@ -45,7 +45,7 @@ body {
 }
 
 .title-text {
-    font-size: 1.75rem;
+    font-size: 1.35rem;
     font-weight: 800;
     letter-spacing: 0.1em;
     color: #ffffff;
@@ -55,8 +55,8 @@ body {
 .nav-menu {
     display: flex;
     align-items: center;
-    gap: 2rem;
-    margin-left: 3rem;
+    gap: 1.75rem;
+    margin-left: 2.5rem;
 }
 
 .nav-link {
@@ -65,7 +65,7 @@ body {
     background: none;
     border: none;
     color: #cbd5e1;
-    font-size: 1.25rem;
+    font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     transition: color 0.2s;
@@ -258,18 +258,18 @@ body {
 }
 
 .header-greeting {
-    font-size: 1.25rem;
+    font-size: 1rem;
     color: #cbd5e1;
 }
 
 .btn-header {
-    padding: 0.75rem 1.75rem;
+    padding: 0.6rem 1.25rem;
     background: #3b82f6;
     color: #ffffff;
     border: none;
     border-radius: 10px;
     font-weight: 600;
-    font-size: 1.25rem;
+    font-size: 1rem;
     cursor: pointer;
     transition: background 0.2s;
     text-decoration: none;
