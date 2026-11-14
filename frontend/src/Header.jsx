@@ -2,7 +2,6 @@ import { Link, NavLink } from 'react-router';
 import logoImage from './assets/CarLogo.png';
 import UserMenu from './layout/header/UserMenu';
 
-
 function Header({ user, onLogout }) {
     return (
         <header className="header-bar">

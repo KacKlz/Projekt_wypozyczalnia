@@ -2,9 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import '../../styles/header/UserMenu.css';
 
-
 function UserMenu({ user, onLogout }) {
-    // Stan menu i dane uzytkownika
+    // Menu state and user data
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef(null);
 
@@ -16,7 +15,7 @@ function UserMenu({ user, onLogout }) {
         onLogout();
     };
 
-    // Zamykanie menu po kliknieciu poza nim lub klawiszem Esc
+    // Close the menu on outside click or Escape key
     useEffect(() => {
         if (!isMenuOpen) return;
 
@@ -41,7 +40,7 @@ function UserMenu({ user, onLogout }) {
         };
     }, [isMenuOpen]);
 
-    // Avatar i rozwijana lista
+    // Avatar and dropdown list
     return (
         <div className="user-menu" ref={menuRef}>
             <button
