@@ -1,5 +1,6 @@
 import { Link, NavLink } from 'react-router';
 import logoImage from './assets/CarLogo.png';
+import UserMenu from './UserMenu';
 
 
 function Header({ user, onLogout }) {
@@ -44,12 +45,10 @@ function Header({ user, onLogout }) {
 
             {user && (
                 <div className="header-actions">
-                    <span className="header-greeting">
-                        Hello, {user.imie || 'User'}!
-                    </span>
-                    <button className="btn-header" onClick={onLogout}>
-                        Log out
-                    </button>
+                    <Link to="/booking" className="btn-header">
+                        Book now
+                    </Link>
+                    <UserMenu user={user} onLogout={onLogout} />
                 </div>
             )}
         </header>
