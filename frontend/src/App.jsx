@@ -17,7 +17,7 @@ function App() {
     const [user, setUser] = useState(null);
     const [isCheckingSession, setIsCheckingSession] = useState(true);
 
-    // Sprawdzenie sesji po odswiezeniu strony
+    // Check session after page refresh
     useEffect(() => {
         fetch('/api/auth/me')
             .then((response) => (response.ok ? response.json() : null))
@@ -26,25 +26,25 @@ function App() {
             .finally(() => setIsCheckingSession(false));
     }, []);
 
-    // Pomyslne logowanie
+    // Successful login
     const handleLoginSuccess = (userData) => {
         setUser(userData);
         navigate('/');
     };
 
-    // Wylogowanie
+    // Logout
     const handleLogout = async () => {
         try {
             await fetch('/api/auth/logout', { method: 'POST' });
         } catch {
-            // Wylogowanie lokalne nawet przy bledzie serwera
+            // Log out locally even if the server request fails
         }
 
         setUser(null);
         navigate('/login');
     };
 
-    // Oczekiwanie na sprawdzenie sesji
+    // Waiting for session check
     if (isCheckingSession) {
         return (
             <div className="app">
@@ -58,7 +58,7 @@ function App() {
             <Header user={user} onLogout={handleLogout} />
 
             <Routes>
-                {/* Strona glowna */}
+                {/* Home */}
                 <Route
                     path="/"
                     element={
@@ -70,7 +70,7 @@ function App() {
                     }
                 />
 
-                {/* Logowanie */}
+                {/* Login */}
                 <Route
                     path="/login"
                     element={
@@ -85,7 +85,7 @@ function App() {
                     }
                 />
 
-                {/* Rejestracja */}
+                {/* Register */}
                 <Route
                     path="/register"
                     element={
@@ -99,16 +99,16 @@ function App() {
                     }
                 />
 
-                {/* Flota */}
+                {/* Fleet */}
                 <Route path="/fleet" element={<Fleet />} />
 
-                {/* O nas */}
+                {/* About */}
                 <Route path="/about" element={<About />} />
 
-                {/* Kontakt */}
+                {/* Contact */}
                 <Route path="/contact" element={<Contact />} />
 
-                {/* Rezerwacja */}
+                {/* Booking */}
                 <Route
                     path="/booking"
                     element={
@@ -120,7 +120,7 @@ function App() {
                     }
                 />
 
-                {/* Moje rezerwacje */}
+                {/* My bookings */}
                 <Route
                     path="/my-bookings"
                     element={
@@ -132,7 +132,7 @@ function App() {
                     }
                 />
 
-                {/* Nieznany adres */}
+                {/* Unknown route */}
                 <Route
                     path="*"
                     element={<Navigate to="/" replace />}
