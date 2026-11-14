@@ -8,6 +8,7 @@ import Home from './layout/home/Home';
 import Fleet from './layout/fleet/Fleet';
 import About from './layout/about/About';
 import Contact from './layout/contact/Contact';
+import Booking from './layout/booking/Booking';
 
 function App() {
     const navigate = useNavigate();
@@ -105,6 +106,18 @@ function App() {
 
                 {/* Kontakt */}
                 <Route path="/contact" element={<Contact />} />
+
+                {/* Rezerwacja */}
+                <Route
+                    path="/booking"
+                    element={
+                        user ? (
+                            <Booking />
+                        ) : (
+                            <Navigate to="/login" replace />
+                        )
+                    }
+                />
 
                 {/* Nieznany adres */}
                 <Route

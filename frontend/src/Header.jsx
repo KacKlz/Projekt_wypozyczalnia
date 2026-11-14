@@ -34,6 +34,12 @@ function Header({ user, onLogout }) {
                     Contact
                 </Link>
 
+                {user && (
+                    <Link to="/booking" className="nav-link">
+                        Book now
+                    </Link>
+                )}
+
                 {!user && (
                     <>
                         <Link to="/login" className="nav-link">
