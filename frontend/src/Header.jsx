@@ -29,6 +29,11 @@ function Header({ user, onLogout }) {
                     About
                 </Link>
 
+                {/* Contact */}
+                <Link to="/contact" className="nav-link">
+                    Contact
+                </Link>
+
                 {!user && (
                     <>
                         <Link to="/login" className="nav-link">

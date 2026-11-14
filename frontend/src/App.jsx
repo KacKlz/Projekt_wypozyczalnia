@@ -7,6 +7,7 @@ import Register from './Register';
 import Home from './layout/home/Home';
 import Fleet from './layout/fleet/Fleet';
 import About from './layout/about/About';
+import Contact from './layout/contact/Contact';
 
 function App() {
     const navigate = useNavigate();
@@ -101,6 +102,9 @@ function App() {
 
                 {/* O nas */}
                 <Route path="/about" element={<About />} />
+
+                {/* Kontakt */}
+                <Route path="/contact" element={<Contact />} />
 
                 {/* Nieznany adres */}
                 <Route

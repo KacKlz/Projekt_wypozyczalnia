@@ -1,3 +1,5 @@
+import '../../styles/fleet/Fleet.css';
+
 function Fleet() {
     return(
         <main className="fleet">
