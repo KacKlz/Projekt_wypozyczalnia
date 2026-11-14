@@ -17,6 +17,29 @@ function Header({ user, onLogout }) {
                 <Link to="/" className="nav-link">
                     Home
                 </Link>
+                <Link to="/fleet" className="nav-link">
+                    Our fleet
+                </Link>
+
+                {user && (
+                    <Link to="/booking" className="nav-link">
+                        Book now
+                    </Link>
+                )}
+
+                <Link to="/about" className="nav-link">
+                    About
+                </Link>
+                <Link to="/contact" className="nav-link">
+                    Contact
+                </Link>
+
+                {user && (
+                    <Link to="/my-bookings" className="btn-header">
+                        My bookings
+                    </Link>
+                )}
+
                 {!user && (
                     <>
                         <Link to="/login" className="nav-link">
