@@ -19,8 +19,14 @@ function Header({ user, onLogout }) {
                     Home
                 </Link>
 
+                {/* Our fleet*/}
                 <Link to="/fleet" className="nav-link">
                     Our fleet
+                </Link>
+
+                {/* About */}
+                <Link to="/about" className="nav-link">
+                    About
                 </Link>
 
                 {!user && (
