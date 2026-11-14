@@ -277,3 +277,23 @@ body {
 .btn-header:hover {
     background: #2563eb;
 }
+
+.nav-link {
+    position: relative;
+    padding: 0.35rem 0;
+}
+
+.nav-link.active {
+    color: #ffffff;
+}
+
+.nav-link.active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    width: 100%;
+    height: 3px;
+    border-radius: 2px;
+    background: #3b82f6;
+}

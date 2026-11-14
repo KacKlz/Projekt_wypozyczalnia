@@ -1,58 +1,43 @@
-import { Link } from 'react-router';
+import { Link, NavLink } from 'react-router';
 import logoImage from './assets/CarLogo.png';
 
 
 function Header({ user, onLogout }) {
     return (
         <header className="header-bar">
-            <Link to="/" className="logo-container">
-                <img
-                    src={logoImage}
-                    alt="Car Rental Logo"
-                    className="logo-image"
-                />
+            <div className="logo-container">
+                <Link to="/">
+                    <img
+                        src={logoImage}
+                        alt="Car Rental Logo"
+                        className="logo-image"
+                    />
+                </Link>
                 <h1 className="title-text">Cars-rent.pl</h1>
-            </Link>
+            </div>
 
             <nav className="nav-menu">
-                <Link to="/" className="nav-link">
+                <NavLink to="/" end className="nav-link">
                     Home
-                </Link>
-
-                {/* Our fleet*/}
-                <Link to="/fleet" className="nav-link">
+                </NavLink>
+                <NavLink to="/fleet" className="nav-link">
                     Our fleet
-                </Link>
-
-
-                {user && (
-                    <Link to="/booking" className="nav-link">
-                        Book now
-                    </Link>
-                )}
-
-                {/* About */}
-                <Link to="/about" className="nav-link">
+                </NavLink>
+                <NavLink to="/about" className="nav-link">
                     About
-                </Link>
-
-                {/* Contact */}
-                <Link to="/contact" className="nav-link">
+                </NavLink>
+                <NavLink to="/contact" className="nav-link">
                     Contact
-                </Link>
-
-                <Link to="/my-bookings" className="btn-header">
-                    My bookings
-                </Link>
+                </NavLink>
 
                 {!user && (
                     <>
-                        <Link to="/login" className="nav-link">
+                        <NavLink to="/login" className="nav-link">
                             Sign In
-                        </Link>
-                        <Link to="/register" className="nav-link">
+                        </NavLink>
+                        <NavLink to="/register" className="nav-link">
                             Sign Up
-                        </Link>
+                        </NavLink>
                     </>
                 )}
             </nav>
