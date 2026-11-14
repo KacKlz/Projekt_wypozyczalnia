@@ -5,14 +5,14 @@ import logoImage from './assets/CarLogo.png';
 function Header({ user, onLogout }) {
     return (
         <header className="header-bar">
-            <div className="logo-container">
+            <Link to="/" className="logo-container">
                 <img
                     src={logoImage}
                     alt="Car Rental Logo"
                     className="logo-image"
                 />
                 <h1 className="title-text">Cars-rent.pl</h1>
-            </div>
+            </Link>
 
             <nav className="nav-menu">
                 <Link to="/" className="nav-link">
