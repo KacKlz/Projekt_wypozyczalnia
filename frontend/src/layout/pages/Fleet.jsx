@@ -1,9 +1,9 @@
-import '../../styles/fleet/Fleet.css';
+import '../../styles/pages/Page.css';
 
 function Fleet() {
-    return(
-        <main className="fleet">
-            <h1>this will be a subpage..</h1>
+    return (
+        <main className="page">
+            <h1>This will be a fleet subpage..</h1>
         </main>
     );
 }

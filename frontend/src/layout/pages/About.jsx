@@ -1,9 +1,9 @@
-import '../../styles/about/About.css';
+import '../../styles/pages/Page.css';
 
 function About() {
-    return(
-        <main className="about">
-            <h1>this will be a about subpage..</h1>
+    return (
+        <main className="page">
+            <h1>This will be an about subpage..</h1>
         </main>
     );
 }

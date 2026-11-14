@@ -1,9 +1,9 @@
-import '../../styles/booking/Booking.css';
+import '../../styles/pages/Page.css';
 
 function Booking() {
     return (
-        <main className="booking">
-            <h1>this will be a booking subpage..</h1>
+        <main className="page">
+            <h1>This will be a booking subpage..</h1>
         </main>
     );
 }

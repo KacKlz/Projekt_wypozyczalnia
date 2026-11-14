@@ -1,9 +1,9 @@
-import '../../styles/contact/Contact.css';
+import '../../styles/pages/Page.css';
 
 function Contact() {
-    return(
-        <main className="contact">
-            <h1>this will be a contact subpage..</h1>
+    return (
+        <main className="page">
+            <h1>This will be a contact subpage..</h1>
         </main>
     );
 }
