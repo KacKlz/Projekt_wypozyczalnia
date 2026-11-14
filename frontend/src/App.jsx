@@ -9,6 +9,7 @@ import Fleet from './layout/fleet/Fleet';
 import About from './layout/about/About';
 import Contact from './layout/contact/Contact';
 import Booking from './layout/booking/Booking';
+import MyBookings from './layout/myBookings/MyBookings';
 
 function App() {
     const navigate = useNavigate();
@@ -113,6 +114,18 @@ function App() {
                     element={
                         user ? (
                             <Booking />
+                        ) : (
+                            <Navigate to="/login" replace />
+                        )
+                    }
+                />
+
+                {/* Moje rezerwacje */}
+                <Route
+                    path="/my-bookings"
+                    element={
+                        user ? (
+                            <MyBookings />
                         ) : (
                             <Navigate to="/login" replace />
                         )

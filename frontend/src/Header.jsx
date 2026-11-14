@@ -24,6 +24,13 @@ function Header({ user, onLogout }) {
                     Our fleet
                 </Link>
 
+
+                {user && (
+                    <Link to="/booking" className="nav-link">
+                        Book now
+                    </Link>
+                )}
+
                 {/* About */}
                 <Link to="/about" className="nav-link">
                     About
@@ -34,11 +41,9 @@ function Header({ user, onLogout }) {
                     Contact
                 </Link>
 
-                {user && (
-                    <Link to="/booking" className="nav-link">
-                        Book now
-                    </Link>
-                )}
+                <Link to="/my-bookings" className="btn-header">
+                    My bookings
+                </Link>
 
                 {!user && (
                     <>
