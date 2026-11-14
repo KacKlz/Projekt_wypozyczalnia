@@ -34,7 +34,6 @@ body {
     display: flex;
     align-items: center;
     gap: 1.5rem;
-    text-decoration: none;
 }
 
 .logo-image {
@@ -61,6 +60,8 @@ body {
 }
 
 .nav-link {
+    position: relative;
+    padding: 0.35rem 0;
     background: none;
     border: none;
     color: #cbd5e1;
@@ -276,11 +277,6 @@ body {
 
 .btn-header:hover {
     background: #2563eb;
-}
-
-.nav-link {
-    position: relative;
-    padding: 0.35rem 0;
 }
 
 .nav-link.active {
