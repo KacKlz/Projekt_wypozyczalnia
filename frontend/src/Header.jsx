@@ -1,6 +1,6 @@
 import { Link, NavLink } from 'react-router';
 import logoImage from './assets/CarLogo.png';
-import UserMenu from './UserMenu';
+import UserMenu from './layout/header/UserMenu';
 
 
 function Header({ user, onLogout }) {

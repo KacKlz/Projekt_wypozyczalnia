@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
-import './styles/userMenu/UserMenu.css';
+import '../../styles/header/UserMenu.css';
 
 
 function UserMenu({ user, onLogout }) {
