@@ -9,7 +9,6 @@
 
     .title-text {
         display: block;
-        font-size: 1.1rem;
     }
 
     .btn-header {
@@ -89,6 +88,8 @@
         padding: 0;
         background: none;
         border-bottom: none;
+        max-height: none;
+        overflow: visible;
     }
 
     .nav-link {
