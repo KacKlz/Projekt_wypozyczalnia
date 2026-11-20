@@ -10,6 +10,10 @@ function Header({ user, onLogout }) {
     // The menu is open only on that path, so it closes automatically after navigation.
     const [openedAt, setOpenedAt] = useState(null);
     const isNavOpen = openedAt === pathname;
+    // Forget the stale path after navigating away, so the menu won't reopen on return
+    if (openedAt !== null && !isNavOpen) {
+        setOpenedAt(null);
+    }
 
     const headerRef = useRef(null);
     const toggleRef = useRef(null);
