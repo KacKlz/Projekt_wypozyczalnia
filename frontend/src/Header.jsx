@@ -1,8 +1,12 @@
+import { useState } from 'react';
 import { Link, NavLink } from 'react-router';
 import logoImage from './assets/CarLogo.png';
 import UserMenu from './layout/header/UserMenu';
 
 function Header({ user, onLogout }) {
+    // Mobile menu (hamburger) state
+    const [isNavOpen, setIsNavOpen] = useState(false);
+
     return (
         <header className="header-bar">
             <div className="logo-container">
@@ -16,7 +20,11 @@ function Header({ user, onLogout }) {
                 <h1 className="title-text">Cars-rent.pl</h1>
             </div>
 
-            <nav className="nav-menu">
+            <nav
+                id="main-nav"
+                className={`nav-menu${isNavOpen ? ' open' : ''}`}
+                onClick={() => setIsNavOpen(false)}
+            >
                 <NavLink to="/" end className="nav-link">
                     Home
                 </NavLink>
@@ -50,6 +58,19 @@ function Header({ user, onLogout }) {
                     <UserMenu user={user} onLogout={onLogout} />
                 </div>
             )}
+
+            <button
+                type="button"
+                className={`nav-toggle${isNavOpen ? ' open' : ''}`}
+                onClick={() => setIsNavOpen((open) => !open)}
+                aria-label="Menu"
+                aria-expanded={isNavOpen}
+                aria-controls="main-nav"
+            >
+                <span className="nav-toggle-bar"></span>
+                <span className="nav-toggle-bar"></span>
+                <span className="nav-toggle-bar"></span>
+            </button>
         </header>
     );
 }
