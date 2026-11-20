@@ -54,7 +54,6 @@ body {
     text-transform: uppercase;
 }
 
-/* Mobile: menu jako rozwijany panel pod headerem */
 .nav-menu {
     display: none;
     position: absolute;
@@ -67,6 +66,8 @@ body {
     padding: 0.5rem 1rem 1rem;
     background: #0f172a;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    max-height: calc(100dvh - 70px);
+    overflow-y: auto;
 }
 
 .nav-menu.open {
@@ -84,6 +85,7 @@ body {
     background: none;
     border: none;
     cursor: pointer;
+    order: 1;
 }
 
 .nav-toggle-bar {
