@@ -4,16 +4,19 @@ import logoImage from './assets/CarLogo.png';
 import UserMenu from './layout/header/UserMenu';
 
 function Header({ user, onLogout }) {
-    // Mobile menu (hamburger) state
-    const [isNavOpen, setIsNavOpen] = useState(false);
+    const { pathname } = useLocation();
+
+    // Path on which the mobile menu was opened.
+    // The menu is open only on that path, so it closes automatically after navigation.
+    const [openedAt, setOpenedAt] = useState(null);
+    const isNavOpen = openedAt === pathname;
+
     const headerRef = useRef(null);
     const toggleRef = useRef(null);
-    const location = useLocation();
 
-    // Close the menu whenever the route changes
-    useEffect(() => {
-        setIsNavOpen(false);
-    }, [location.pathname]);
+    const closeNav = () => setOpenedAt(null);
+    const toggleNav = () =>
+        setOpenedAt((path) => (path === pathname ? null : pathname));
 
     // Close the menu on outside click or Escape key
     useEffect(() => {
@@ -21,13 +24,13 @@ function Header({ user, onLogout }) {
 
         const handleClickOutside = (event) => {
             if (headerRef.current && !headerRef.current.contains(event.target)) {
-                setIsNavOpen(false);
+                setOpenedAt(null);
             }
         };
 
         const handleEscape = (event) => {
             if (event.key === 'Escape') {
-                setIsNavOpen(false);
+                setOpenedAt(null);
                 toggleRef.current?.focus();
             }
         };
@@ -41,10 +44,17 @@ function Header({ user, onLogout }) {
         };
     }, [isNavOpen]);
 
+    // Close the menu when any link inside it is clicked (also the current route)
+    const handleNavClick = (event) => {
+        if (event.target.closest('a')) {
+            closeNav();
+        }
+    };
+
     return (
         <header className="header-bar" ref={headerRef}>
             <div className="logo-container">
-                <Link to="/">
+                <Link to="/" onClick={closeNav}>
                     <img
                         src={logoImage}
                         alt="Car Rental Logo"
@@ -58,7 +68,7 @@ function Header({ user, onLogout }) {
                 type="button"
                 ref={toggleRef}
                 className={`nav-toggle${isNavOpen ? ' open' : ''}`}
-                onClick={() => setIsNavOpen((open) => !open)}
+                onClick={toggleNav}
                 aria-label="Menu"
                 aria-expanded={isNavOpen}
                 aria-controls="main-nav"
@@ -71,6 +81,7 @@ function Header({ user, onLogout }) {
             <nav
                 id="main-nav"
                 className={`nav-menu${isNavOpen ? ' open' : ''}`}
+                onClick={handleNavClick}
             >
                 <NavLink to="/" end className="nav-link">
                     Home
@@ -99,7 +110,7 @@ function Header({ user, onLogout }) {
 
             {user && (
                 <div className="header-actions">
-                    <Link to="/booking" className="btn-header">
+                    <Link to="/booking" className="btn-header" onClick={closeNav}>
                         Book now
                     </Link>
                     <UserMenu user={user} onLogout={onLogout} />
