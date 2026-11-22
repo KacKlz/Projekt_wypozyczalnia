@@ -15,7 +15,7 @@ function Header({ user, onLogout }) {
         setOpenedAt(null);
     }
 
-    const headerRef = useRef(null);
+    const navRef = useRef(null);
     const toggleRef = useRef(null);
 
     const closeNav = () => setOpenedAt(null);
@@ -27,7 +27,10 @@ function Header({ user, onLogout }) {
         if (!isNavOpen) return;
 
         const handleClickOutside = (event) => {
-            if (headerRef.current && !headerRef.current.contains(event.target)) {
+            const clickedToggle = toggleRef.current?.contains(event.target);
+            const clickedNav = navRef.current?.contains(event.target);
+
+            if (!clickedToggle && !clickedNav) {
                 setOpenedAt(null);
             }
         };
@@ -56,7 +59,7 @@ function Header({ user, onLogout }) {
     };
 
     return (
-        <header className="header-bar" ref={headerRef}>
+        <header className="header-bar">
             <div className="logo-container">
                 <Link to="/" onClick={closeNav}>
                     <img
@@ -84,6 +87,7 @@ function Header({ user, onLogout }) {
 
             <nav
                 id="main-nav"
+                ref={navRef}
                 className={`nav-menu${isNavOpen ? ' open' : ''}`}
                 onClick={handleNavClick}
             >
