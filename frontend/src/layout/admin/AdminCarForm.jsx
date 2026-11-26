@@ -84,10 +84,10 @@ function AdminCarForm({ car, onSave, onCancel }) {
 
     return (
         <form
-            className="mb-8 p-7 bg-[#151e32] border border-white/8 rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.3)]"
+            className="!mb-8 !p-7 bg-[#151e32] border border-white/8 rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.3)]"
             onSubmit={handleSubmit}
         >
-            <h3 className="mb-5 text-[1.15rem] font-bold text-white">
+            <h3 className="!mb-5 text-[1.15rem] font-bold text-white">
                 {car ? `Edit ${car.make} ${car.model}` : 'Add a new car'}
             </h3>
 
@@ -125,7 +125,7 @@ function AdminCarForm({ car, onSave, onCancel }) {
                         name="fuel_type"
                         value={form.fuel_type}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 bg-[#0b1120] border border-[#1e293b] rounded-lg text-[0.95rem] text-white outline-none transition-colors duration-200 focus:border-[#3b82f6]"
+                        className="w-full !px-4 !py-3 bg-[#0b1120] border border-[#1e293b] rounded-lg text-[0.95rem] text-white outline-none transition-colors duration-200 focus:border-[#3b82f6]"
                     >
                         {fuelTypes.map((fuelType) => (
                             <option key={fuelType} value={fuelType}>
@@ -140,7 +140,7 @@ function AdminCarForm({ car, onSave, onCancel }) {
                     <input type="number" name="avg_fuel_consumption" min="0" step="any" placeholder="4.5" value={form.avg_fuel_consumption} onChange={handleChange} />
                 </div>
 
-                <label className="flex items-center gap-[0.6rem] mb-5 py-3 text-[0.875rem] font-semibold text-[#cbd5e1] cursor-pointer">
+                <label className="flex items-center gap-[0.6rem] !mb-5 !py-3 text-[0.875rem] font-semibold text-[#cbd5e1] cursor-pointer">
                     <input
                         type="checkbox"
                         name="is_rented"
@@ -155,7 +155,7 @@ function AdminCarForm({ car, onSave, onCancel }) {
             <div className="flex gap-4">
                 <button
                     type="submit"
-                    className="mt-2 px-8 py-[0.85rem] bg-[#3b82f6] rounded-lg text-[1rem] font-semibold text-white cursor-pointer transition-colors duration-200 hover:bg-[#2563eb]"
+                    className="!mt-2 !px-8 !py-[0.85rem] bg-[#3b82f6] rounded-lg text-[1rem] font-semibold text-white cursor-pointer transition-colors duration-200 hover:bg-[#2563eb]"
                 >
                     {car ? 'Save changes' : 'Add car'}
                 </button>
@@ -163,7 +163,7 @@ function AdminCarForm({ car, onSave, onCancel }) {
                 {car && (
                     <button
                         type="button"
-                        className="mt-2 px-8 py-[0.85rem] border border-[#334155] rounded-lg text-[1rem] font-semibold text-[#cbd5e1] cursor-pointer transition-colors duration-200 hover:border-[#94a3b8] hover:text-white"
+                        className="!mt-2 !px-8 !py-[0.85rem] border border-[#334155] rounded-lg text-[1rem] font-semibold text-[#cbd5e1] cursor-pointer transition-colors duration-200 hover:border-[#94a3b8] hover:text-white"
                         onClick={onCancel}
                     >
                         Cancel
