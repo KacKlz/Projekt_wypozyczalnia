@@ -1,47 +1,58 @@
-import { Link } from 'react-router';
+import { Link, NavLink } from 'react-router';
 import logoImage from './assets/CarLogo.png';
+import UserMenu from './layout/header/UserMenu';
 
 function Header({ user, onLogout }) {
     return (
         <header className="header-bar">
             <div className="logo-container">
-                <img
-                    src={logoImage}
-                    alt="Car Rental Logo"
-                    className="logo-image"
-                />
+                <Link to="/">
+                    <img
+                        src={logoImage}
+                        alt="Car Rental Logo"
+                        className="logo-image"
+                    />
+                </Link>
                 <h1 className="title-text">Cars-rent.pl</h1>
             </div>
 
             <nav className="nav-menu">
-                <Link to="/" className="nav-link">
+                <NavLink to="/" end className="nav-link">
                     Home
-                </Link>
+                </NavLink>
+                <NavLink to="/fleet" className="nav-link">
+                    Our fleet
+                </NavLink>
+                <NavLink to="/about" className="nav-link">
+                    About
+                </NavLink>
+                <NavLink to="/contact" className="nav-link">
+                    Contact
+                </NavLink>
                 {user && user.role === 'admin' && (
                     <Link to="/admin" className="nav-link">
                         Admin panel
                     </Link>
                 )}
+
                 {!user && (
                     <>
-                        <Link to="/login" className="nav-link">
+                        <NavLink to="/login" className="nav-link">
                             Sign In
-                        </Link>
-                        <Link to="/register" className="nav-link">
+                        </NavLink>
+                        <NavLink to="/register" className="nav-link">
                             Sign Up
-                        </Link>
+                        </NavLink>
                     </>
                 )}
             </nav>
 
             {user && (
                 <div className="header-actions">
-                    <span className="header-greeting">
-                        Hello, {user.imie || 'User'}!
-                    </span>
-                    <button className="btn-header" onClick={onLogout}>
-                        Log out
-                    </button>
+                    <Link to="/booking" className="btn-header">
+                        Book now
+                    </Link>
+                    <UserMenu user={user} onLogout={onLogout} />
                 </div>
             )}
         </header>

@@ -5,6 +5,11 @@ import Header from './Header';
 import Login from './Login';
 import Register from './Register';
 import Home from './layout/home/Home';
+import Fleet from './layout/pages/Fleet';
+import About from './layout/pages/About';
+import Contact from './layout/pages/Contact';
+import Booking from './layout/pages/Booking';
+import MyBookings from './layout/pages/MyBookings';
 import AdminPanel from './layout/admin/AdminPanel';
 
 function App() {
@@ -13,7 +18,7 @@ function App() {
     const [user, setUser] = useState(null);
     const [isCheckingSession, setIsCheckingSession] = useState(true);
 
-    // Sprawdzenie sesji po odswiezeniu strony
+    // Check session after page refresh
     useEffect(() => {
         fetch('/api/auth/me')
             .then((response) => (response.ok ? response.json() : null))
@@ -22,25 +27,25 @@ function App() {
             .finally(() => setIsCheckingSession(false));
     }, []);
 
-    // Pomyslne logowanie
+    // Successful login
     const handleLoginSuccess = (userData) => {
         setUser(userData);
         navigate('/');
     };
 
-    // Wylogowanie
+    // Logout
     const handleLogout = async () => {
         try {
             await fetch('/api/auth/logout', { method: 'POST' });
         } catch {
-            // Wylogowanie lokalne nawet przy bledzie serwera
+            // Log out locally even if the server request fails
         }
 
         setUser(null);
         navigate('/login');
     };
 
-    // Oczekiwanie na sprawdzenie sesji
+    // Waiting for session check
     if (isCheckingSession) {
         return (
             <div className="app">
@@ -54,7 +59,7 @@ function App() {
             <Header user={user} onLogout={handleLogout} />
 
             <Routes>
-                {/* Strona glowna */}
+                {/* Home */}
                 <Route
                     path="/"
                     element={
@@ -66,7 +71,7 @@ function App() {
                     }
                 />
 
-                {/* Logowanie */}
+                {/* Login */}
                 <Route
                     path="/login"
                     element={
@@ -81,7 +86,7 @@ function App() {
                     }
                 />
 
-                {/* Rejestracja */}
+                {/* Register */}
                 <Route
                     path="/register"
                     element={
@@ -91,6 +96,39 @@ function App() {
                             <Register
                                 onSwitchToLogin={() => navigate('/login')}
                             />
+                        )
+                    }
+                />
+
+                {/* Fleet */}
+                <Route path="/fleet" element={<Fleet />} />
+
+                {/* About */}
+                <Route path="/about" element={<About />} />
+
+                {/* Contact */}
+                <Route path="/contact" element={<Contact />} />
+
+                {/* Booking */}
+                <Route
+                    path="/booking"
+                    element={
+                        user ? (
+                            <Booking />
+                        ) : (
+                            <Navigate to="/login" replace />
+                        )
+                    }
+                />
+
+                {/* My bookings */}
+                <Route
+                    path="/my-bookings"
+                    element={
+                        user ? (
+                            <MyBookings />
+                        ) : (
+                            <Navigate to="/login" replace />
                         )
                     }
                 />
@@ -107,7 +145,7 @@ function App() {
                     }
                 />
 
-                {/* Nieznany adres */}
+                {/* Unknown route */}
                 <Route
                     path="*"
                     element={<Navigate to="/" replace />}
