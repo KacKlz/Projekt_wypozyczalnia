@@ -103,6 +103,11 @@ function Header({ user, onLogout }) {
                 <NavLink to="/contact" className="nav-link">
                     Contact
                 </NavLink>
+                {user && user.role === 'admin' && (
+                    <NavLink to="/admin" className="nav-link">
+                        Admin panel
+                    </NavLink>
+                )}
 
                 {!user && (
                     <>
