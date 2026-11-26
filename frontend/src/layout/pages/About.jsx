@@ -130,7 +130,7 @@ function About() {
     };
 
     return (
-        <main className="mx-auto w-full max-w-[1200px] px-6 py-12 sm:px-10">
+        <main className="w-full max-w-[1280px] mx-auto px-4 py-12 sm:px-8">
             {/* Hero header */}
             <section className="mb-14 text-center">
                 <span className="mb-4 inline-block rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 text-xs font-semibold tracking-wider text-blue-400 uppercase">
@@ -148,19 +148,19 @@ function About() {
                 <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
                     <a
                         href="#how-to-rent"
-                        className="rounded-lg border border-white/[0.08] bg-[#151e32] px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-blue-500/50 hover:text-white"
+                        className="rounded-lg border border-white/10 bg-[#151e32] px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-blue-500/50 hover:text-white"
                     >
                         How to rent
                     </a>
                     <a
                         href="#site-guide"
-                        className="rounded-lg border border-white/[0.08] bg-[#151e32] px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-blue-500/50 hover:text-white"
+                        className="rounded-lg border border-white/10 bg-[#151e32] px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-blue-500/50 hover:text-white"
                     >
                         Site map &amp; guide
                     </a>
                     <a
                         href="#faq"
-                        className="rounded-lg border border-white/[0.08] bg-[#151e32] px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-blue-500/50 hover:text-white"
+                        className="rounded-lg border border-white/10 bg-[#151e32] px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-blue-500/50 hover:text-white"
                     >
                         FAQ
                     </a>
@@ -223,7 +223,7 @@ function About() {
                         </Link>
                         <Link
                             to="/booking"
-                            className="rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600"
+                            className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500"
                         >
                             Book now
                         </Link>
@@ -247,7 +247,7 @@ function About() {
                     {SITE_SECTIONS.map((section) => (
                         <article
                             key={section.path}
-                            className="flex flex-col justify-between rounded-xl border border-white/[0.08] bg-[#151e32] p-6 shadow-[0_10px_25px_rgba(0,0,0,0.3)] transition hover:border-blue-500/40"
+                            className="flex flex-col justify-between rounded-xl border border-white/10 bg-[#151e32] p-6 shadow-[0_10px_25px_rgba(0,0,0,0.3)] transition hover:border-blue-500/40"
                         >
                             <div>
                                 <div className="mb-3 flex items-start justify-between gap-3">
@@ -266,7 +266,7 @@ function About() {
                                 </p>
                             </div>
 
-                            <div className="space-y-3 border-t border-white/[0.08] pt-4">
+                            <div className="space-y-3 border-t border-white/10 pt-4">
                                 <div className="text-xs text-slate-400">
                                     <span className="font-semibold text-slate-200">
                                         Where to find it:{' '}
@@ -313,7 +313,7 @@ function About() {
                         return (
                             <div
                                 key={item.question}
-                                className="overflow-hidden rounded-xl border border-white/[0.08] bg-[#151e32] shadow-[0_10px_25px_rgba(0,0,0,0.2)] transition hover:border-blue-500/30"
+                                className="overflow-hidden rounded-xl border border-white/10 bg-[#151e32] shadow-[0_10px_25px_rgba(0,0,0,0.2)] transition hover:border-blue-500/30"
                             >
                                 <button
                                     type="button"
@@ -338,7 +338,7 @@ function About() {
                                 {isOpen && (
                                     <div
                                         id={answerId}
-                                        className="border-t border-white/[0.08] px-6 py-4 text-sm leading-relaxed text-slate-300"
+                                        className="border-t border-white/10 px-6 py-4 text-sm leading-relaxed text-slate-300"
                                     >
                                         {item.answer}
                                     </div>
@@ -350,7 +350,7 @@ function About() {
             </section>
 
             {/* Bottom CTA */}
-            <section className="flex flex-col items-start justify-between gap-6 rounded-xl border border-white/[0.08] bg-[#151e32] p-8 shadow-[0_10px_25px_rgba(0,0,0,0.3)] sm:flex-row sm:items-center">
+            <section className="flex flex-col items-start justify-between gap-6 rounded-xl border border-white/10 bg-[#151e32] p-8 shadow-[0_10px_25px_rgba(0,0,0,0.3)] sm:flex-row sm:items-center">
                 <div>
                     <h2 className="text-xl font-bold text-white">Still have questions?</h2>
                     <p className="mt-1 text-sm text-slate-400">
@@ -359,7 +359,7 @@ function About() {
                 </div>
                 <Link
                     to="/contact"
-                    className="shrink-0 rounded-lg bg-blue-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+                    className="shrink-0 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
                 >
                     Contact us
                 </Link>
