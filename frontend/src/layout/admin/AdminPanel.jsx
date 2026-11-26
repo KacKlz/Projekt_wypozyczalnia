@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminCarForm from './AdminCarForm';
 import AdminCarsTable from './AdminCarsTable';
-import '../../styles/admin/AdminPanel.css';
 
 function AdminPanel() {
     const [cars, setCars] = useState([]);
@@ -103,10 +102,10 @@ function AdminPanel() {
     };
 
     return (
-        <main className="admin-panel">
-            <div className="admin-panel-header">
-                <h2>Admin panel</h2>
-                <p>Add, edit and remove cars from the fleet</p>
+        <main className="flex-1 w-full max-w-[1100px] mx-auto px-6 pt-10 pb-16">
+            <div className="mb-7">
+                <h2 className="mb-2 text-[1.75rem] font-bold text-white">Admin panel</h2>
+                <p className="text-[0.95rem] text-[#94a3b8]">Add, edit and remove cars from the fleet</p>
             </div>
 
             {message && (
@@ -123,7 +122,7 @@ function AdminPanel() {
             />
 
             {isLoading ? (
-                <p className="admin-panel-info">Loading cars...</p>
+                <p className="py-8 text-center text-[#94a3b8]">Loading cars...</p>
             ) : (
                 <AdminCarsTable
                     cars={cars}
