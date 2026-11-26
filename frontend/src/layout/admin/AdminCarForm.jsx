@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import '../../styles/admin/AdminCarForm.css';
 
 const fuelTypes = ['petrol', 'diesel', 'hybrid', 'plug-in hybrid', 'electric'];
 
@@ -84,12 +83,17 @@ function AdminCarForm({ car, onSave, onCancel }) {
     };
 
     return (
-        <form className="admin-car-form" onSubmit={handleSubmit}>
-            <h3>{car ? `Edit ${car.make} ${car.model}` : 'Add a new car'}</h3>
+        <form
+            className="mb-8 p-7 bg-[#151e32] border border-white/8 rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.3)]"
+            onSubmit={handleSubmit}
+        >
+            <h3 className="mb-5 text-[1.15rem] font-bold text-white">
+                {car ? `Edit ${car.make} ${car.model}` : 'Add a new car'}
+            </h3>
 
             {error && <div className="message-error">{error}</div>}
 
-            <div className="admin-car-form-grid">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-x-5 items-end">
                 <div className="form-field">
                     <label>Make</label>
                     <input name="make" placeholder="Toyota" value={form.make} onChange={handleChange} />
@@ -117,7 +121,12 @@ function AdminCarForm({ car, onSave, onCancel }) {
 
                 <div className="form-field">
                     <label>Fuel type</label>
-                    <select name="fuel_type" value={form.fuel_type} onChange={handleChange}>
+                    <select
+                        name="fuel_type"
+                        value={form.fuel_type}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 bg-[#0b1120] border border-[#1e293b] rounded-lg text-[0.95rem] text-white outline-none transition-colors duration-200 focus:border-[#3b82f6]"
+                    >
                         {fuelTypes.map((fuelType) => (
                             <option key={fuelType} value={fuelType}>
                                 {fuelType}
@@ -131,19 +140,32 @@ function AdminCarForm({ car, onSave, onCancel }) {
                     <input type="number" name="avg_fuel_consumption" min="0" step="any" placeholder="4.5" value={form.avg_fuel_consumption} onChange={handleChange} />
                 </div>
 
-                <label className="admin-car-form-checkbox">
-                    <input type="checkbox" name="is_rented" checked={form.is_rented} onChange={handleChange} />
+                <label className="flex items-center gap-[0.6rem] mb-5 py-3 text-[0.875rem] font-semibold text-[#cbd5e1] cursor-pointer">
+                    <input
+                        type="checkbox"
+                        name="is_rented"
+                        checked={form.is_rented}
+                        onChange={handleChange}
+                        className="w-[1.1rem] h-[1.1rem] accent-[#3b82f6] cursor-pointer"
+                    />
                     Currently rented
                 </label>
             </div>
 
-            <div className="admin-car-form-actions">
-                <button type="submit" className="btn-primary">
+            <div className="flex gap-4">
+                <button
+                    type="submit"
+                    className="mt-2 px-8 py-[0.85rem] bg-[#3b82f6] rounded-lg text-[1rem] font-semibold text-white cursor-pointer transition-colors duration-200 hover:bg-[#2563eb]"
+                >
                     {car ? 'Save changes' : 'Add car'}
                 </button>
 
                 {car && (
-                    <button type="button" className="admin-btn-cancel" onClick={onCancel}>
+                    <button
+                        type="button"
+                        className="mt-2 px-8 py-[0.85rem] border border-[#334155] rounded-lg text-[1rem] font-semibold text-[#cbd5e1] cursor-pointer transition-colors duration-200 hover:border-[#94a3b8] hover:text-white"
+                        onClick={onCancel}
+                    >
                         Cancel
                     </button>
                 )}
