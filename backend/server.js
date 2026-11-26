@@ -5,6 +5,7 @@ const dns = require("dns");
 const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/auth");
 const contactRoutes = require("./routes/contactRoutes");
+const adminCarsRoutes = require("./routes/adminCars");
 
 
 const PORT = process.env.PORT || 3001;
@@ -21,6 +22,7 @@ app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/admin/cars", adminCarsRoutes);
 
 if (!process.env.MONGO_URI) {
     console.error("Blad: brak MONGO_URI w pliku .env");
