@@ -45,7 +45,7 @@ function Contact() {
             recent.push(Date.now());
             localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(recent));
         } catch {
-            // Ignoruj błędy dostępu do localStorage
+            // Ignore localStorage access errors
         }
     };
 
@@ -54,18 +54,18 @@ function Contact() {
             case 'name': {
                 const trimmed = (value || '').trim();
                 if (!trimmed) {
-                    return 'Imię jest wymagane.';
+                    return 'Full name is required.';
                 }
                 const lettersRegex = /^[a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ\s-]+$/;
                 if (!lettersRegex.test(trimmed)) {
-                    return 'Imię może zawierać wyłącznie litery (brak cyfr i symboli).';
+                    return 'Name may only contain letters (no digits or symbols).';
                 }
                 const letterCount = (trimmed.match(/[a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g) || []).length;
                 if (letterCount < 3) {
-                    return 'Imię musi zawierać co najmniej 3 litery.';
+                    return 'Name must contain at least 3 letters.';
                 }
                 if (trimmed.length > 50) {
-                    return 'Imię może mieć maksymalnie 50 znaków.';
+                    return 'Name cannot exceed 50 characters.';
                 }
                 return '';
             }
@@ -73,14 +73,14 @@ function Contact() {
             case 'email': {
                 const trimmed = (value || '').trim();
                 if (!trimmed) {
-                    return 'Adres e-mail jest wymagany.';
+                    return 'Email address is required.';
                 }
                 if (!trimmed.includes('@') || !trimmed.includes('.com')) {
-                    return 'Adres e-mail musi zawierać "@" oraz domenę ".com".';
+                    return 'Email address must contain "@" and the ".com" domain.';
                 }
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(trimmed)) {
-                    return 'Wprowadź prawidłowy adres e-mail.';
+                    return 'Please enter a valid email address.';
                 }
                 return '';
             }
@@ -88,14 +88,14 @@ function Contact() {
             case 'subject': {
                 const trimmed = (value || '').trim();
                 if (!trimmed) {
-                    return 'Temat jest wymagany.';
+                    return 'Subject is required.';
                 }
                 const wordCount = countWords(trimmed);
                 if (wordCount < 5) {
-                    return `Temat musi zawierać co najmniej 5 słów (aktualnie: ${wordCount}).`;
+                    return `Subject must contain at least 5 words (current: ${wordCount}).`;
                 }
                 if (wordCount > 200) {
-                    return `Temat może zawierać maksymalnie 200 słów (aktualnie: ${wordCount}).`;
+                    return `Subject cannot exceed 200 words (current: ${wordCount}).`;
                 }
                 return '';
             }
@@ -103,20 +103,20 @@ function Contact() {
             case 'message': {
                 const trimmed = (value || '').trim();
                 if (!trimmed) {
-                    return 'Wiadomość jest wymagana.';
+                    return 'Message is required.';
                 }
                 if (trimmed.length < 5) {
-                    return `Wiadomość musi mieć co najmniej 5 znaków (aktualnie: ${trimmed.length}).`;
+                    return `Message must be at least 5 characters long (current: ${trimmed.length}).`;
                 }
                 if (trimmed.length > 300) {
-                    return `Wiadomość może mieć maksymalnie 300 znaków (aktualnie: ${trimmed.length}).`;
+                    return `Message cannot exceed 300 characters (current: ${trimmed.length}).`;
                 }
                 return '';
             }
 
             case 'acceptedPrivacy': {
                 if (!value) {
-                    return 'Wymagana jest akceptacja polityki prywatności.';
+                    return 'You must accept the privacy policy to continue.';
                 }
                 return '';
             }
@@ -170,7 +170,7 @@ function Contact() {
             const oldestTimestamp = Math.min(...recentSubmissions);
             const remainingMinutes = Math.max(1, Math.ceil((ONE_HOUR_MS - (Date.now() - oldestTimestamp)) / 60000));
             setRateLimitMessage(
-                `Osiągnięto limit wysyłania wiadomości (maksymalnie ${MAX_SUBMISSIONS_PER_HOUR} na godzinę). Spróbuj ponownie za ok. ${remainingMinutes} min.`
+                `Hourly limit reached (maximum ${MAX_SUBMISSIONS_PER_HOUR} messages per hour). Please try again in approx. ${remainingMinutes} min.`
             );
             setSubmittedStatus('rate-limit');
             return;
@@ -207,13 +207,13 @@ function Contact() {
             const data = await response.json().catch(() => ({}));
 
             if (response.status === 429) {
-                setRateLimitMessage(data.message || 'Przekroczono limit 2 wiadomości na godzinę.');
+                setRateLimitMessage(data.message || 'Hourly limit of 2 messages exceeded.');
                 setSubmittedStatus('rate-limit');
                 return;
             }
 
             if (!response.ok) {
-                throw new Error(data.message || 'Błąd wysyłania wiadomości po stronie serwera.');
+                throw new Error(data.message || 'Server error occurred while sending the message.');
             }
 
             recordSubmission();
@@ -227,7 +227,7 @@ function Contact() {
                 acceptedPrivacy: false,
             });
         } catch (error) {
-            setServerErrorMessage(error.message || 'Nie udało się wysłać wiadomości. Spróbuj ponownie później.');
+            setServerErrorMessage(error.message || 'Failed to send message. Please try again later.');
             setSubmittedStatus('server-error');
         } finally {
             setIsSubmitting(false);
@@ -239,10 +239,10 @@ function Contact() {
             <main className="w-full max-w-[1280px] !mx-auto !px-6 sm:!px-10 lg:!px-12 !pt-28 !pb-16 box-border">
                 <div className="!mb-10 text-left">
                     <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight !mb-3">
-                        Kontakt
+                        Contact Us
                     </h1>
                     <p className="text-base sm:text-lg text-slate-400 max-w-2xl leading-relaxed">
-                        Masz pytanie o rezerwację lub ofertę? Napisz albo zadzwoń.
+                        Have a question about a reservation or our offer? Write or call us.
                     </p>
                 </div>
 
@@ -265,7 +265,7 @@ function Contact() {
                                 </div>
                                 <div className="flex flex-col min-w-0 flex-1">
                                     <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 !mb-1">
-                                        Telefon
+                                        Phone Number
                                     </span>
                                     <a
                                         href="tel:+48123456789"
@@ -274,7 +274,7 @@ function Contact() {
                                         +48 123 456 789
                                     </a>
                                     <span className="text-xs sm:text-sm text-slate-400 !mt-1">
-                                        Infolinia: Pon – Pt 8:00 – 20:00
+                                        Helpline: Mon – Fri 8:00 AM – 8:00 PM
                                     </span>
                                 </div>
                             </div>
@@ -296,7 +296,7 @@ function Contact() {
                                 </div>
                                 <div className="flex flex-col min-w-0 flex-1">
                                     <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 !mb-1">
-                                        E-mail
+                                        Email Address
                                     </span>
                                     <a
                                         href="mailto:testwypozyczalnia@gmail.com"
@@ -305,7 +305,7 @@ function Contact() {
                                         testwypozyczalnia@gmail.com
                                     </a>
                                     <span className="text-xs sm:text-sm text-slate-400 !mt-1">
-                                        Odpowiadamy w ciągu 24h
+                                        We respond within 24 hours
                                     </span>
                                 </div>
                             </div>
@@ -326,13 +326,13 @@ function Contact() {
                                 </div>
                                 <div className="flex flex-col min-w-0 flex-1">
                                     <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 !mb-1">
-                                        Punkt główny
+                                        Main Office
                                     </span>
                                     <p className="text-base sm:text-lg font-bold text-white break-words">
-                                        ul. Krakowska 45, 33-100 Tarnów
+                                        45 Krakowska St., 33-100 Tarnow
                                     </p>
                                     <span className="text-xs sm:text-sm text-slate-400 !mt-1">
-                                        Odbiór i zwrot pojazdów 24/7
+                                        Vehicle pickup and return 24/7
                                     </span>
                                 </div>
                             </div>
@@ -340,12 +340,12 @@ function Contact() {
                         <div className="w-full bg-[#151e32] border border-white/10 rounded-xl overflow-hidden shadow-lg box-border">
                             <div className="!px-5 !py-3.5 border-b border-white/10 bg-[#0b1120]/50 flex items-center justify-between">
                                 <span className="text-xs sm:text-sm font-semibold text-slate-300 tracking-wide">
-                                    Obszar działania – Tarnów
+                                    Service Area – Tarnow
                                 </span>
                             </div>
                             <iframe
-                                title="Lokalizacja wypożyczalni – Tarnów"
-                                src="https://www.google.com/maps?q=Tarn%C3%B3w&hl=pl&z=12&output=embed"
+                                title="Rental location – Tarnow"
+                                src="https://www.google.com/maps?q=Tarn%C3%B3w&hl=en&z=12&output=embed"
                                 className="w-full h-[280px] sm:h-[300px] border-0 block"
                                 loading="lazy"
                                 referrerPolicy="no-referrer-when-downgrade"
@@ -356,10 +356,10 @@ function Contact() {
                         <div className="w-full bg-[#151e32] border border-white/10 rounded-xl !p-6 sm:!p-8 lg:!p-10 shadow-xl box-border">
                             <div className="!mb-7">
                                 <h2 className="text-2xl font-bold text-white tracking-tight !mb-2">
-                                    Napisz do nas
+                                    Send Us a Message
                                 </h2>
                                 <p className="text-sm text-slate-400 leading-relaxed">
-                                    Wypełnij formularz, a skontaktujemy się z Tobą najszybciej jak to możliwe.
+                                    Fill out the form and we will get back to you as soon as possible.
                                 </p>
                             </div>
 
@@ -368,7 +368,7 @@ function Contact() {
                                     <svg className="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                                     </svg>
-                                    <span>Wiadomość została wysłana! Odpowiemy najszybciej jak to możliwe.</span>
+                                    <span>Your message has been sent! We will get back to you as soon as possible.</span>
                                 </div>
                             )}
 
@@ -395,14 +395,14 @@ function Contact() {
                                     <svg className="w-5 h-5 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                     </svg>
-                                    <span>Wypełnij poprawnie wszystkie wymagane pola formularza.</span>
+                                    <span>Please fill in all required fields correctly.</span>
                                 </div>
                             )}
 
                             <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5 w-full">
                                 <div className="flex flex-col gap-2 w-full">
                                     <label htmlFor="contact-name" className="text-sm font-semibold text-slate-300">
-                                        Imię i nazwisko <span className="text-red-400">*</span>
+                                        Full Name <span className="text-red-400">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -412,7 +412,7 @@ function Contact() {
                                         disabled={isSubmitting}
                                         value={formData.name}
                                         onChange={handleChange}
-                                        placeholder="np. Jan Kowalski"
+                                        placeholder="e.g. John Doe"
                                         className={`w-full h-12 !px-4 !py-2.5 bg-[#0b1120] rounded-lg text-white text-base placeholder:text-slate-500 outline-none transition duration-150 box-border disabled:opacity-60 ${
                                             hasSubmitted && errors.name
                                                 ? 'border-2 border-red-500 bg-red-950/15 focus:ring-2 focus:ring-red-500/20'
@@ -426,7 +426,7 @@ function Contact() {
 
                                 <div className="flex flex-col gap-2 w-full">
                                     <label htmlFor="contact-email" className="text-sm font-semibold text-slate-300">
-                                        Adres e-mail <span className="text-red-400">*</span>
+                                        Email Address <span className="text-red-400">*</span>
                                     </label>
                                     <input
                                         type="email"
@@ -436,7 +436,7 @@ function Contact() {
                                         disabled={isSubmitting}
                                         value={formData.email}
                                         onChange={handleChange}
-                                        placeholder="np. jan.kowalski@example.com"
+                                        placeholder="e.g. john.doe@example.com"
                                         className={`w-full h-12 !px-4 !py-2.5 bg-[#0b1120] rounded-lg text-white text-base placeholder:text-slate-500 outline-none transition duration-150 box-border disabled:opacity-60 ${
                                             hasSubmitted && errors.email
                                                 ? 'border-2 border-red-500 bg-red-950/15 focus:ring-2 focus:ring-red-500/20'
@@ -450,7 +450,7 @@ function Contact() {
 
                                 <div className="flex flex-col gap-2 w-full">
                                     <label htmlFor="contact-subject" className="text-sm font-semibold text-slate-300">
-                                        Temat <span className="text-red-400">*</span>
+                                        Subject <span className="text-red-400">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -460,7 +460,7 @@ function Contact() {
                                         disabled={isSubmitting}
                                         value={formData.subject}
                                         onChange={handleChange}
-                                        placeholder="np. Zapytanie o wynajem długoterminowy"
+                                        placeholder="e.g. Long-term rental inquiry"
                                         className={`w-full h-12 !px-4 !py-2.5 bg-[#0b1120] rounded-lg text-white text-base placeholder:text-slate-500 outline-none transition duration-150 box-border disabled:opacity-60 ${
                                             hasSubmitted && errors.subject
                                                 ? 'border-2 border-red-500 bg-red-950/15 focus:ring-2 focus:ring-red-500/20'
@@ -475,7 +475,7 @@ function Contact() {
                                 <div className="flex flex-col gap-2 w-full">
                                     <div className="flex items-center justify-between gap-2">
                                         <label htmlFor="contact-message" className="text-sm font-semibold text-slate-300">
-                                            Wiadomość <span className="text-red-400">*</span>
+                                            Message <span className="text-red-400">*</span>
                                         </label>
                                         <span
                                             className={`text-xs font-medium ${
@@ -497,7 +497,7 @@ function Contact() {
                                         maxLength={300}
                                         value={formData.message}
                                         onChange={handleChange}
-                                        placeholder="Wpisz treść swojej wiadomości (5–300 znaków)..."
+                                        placeholder="Enter your message (5–300 characters)..."
                                         className={`w-full min-h-[135px] max-h-[280px] !p-4 bg-[#0b1120] rounded-lg text-white text-base placeholder:text-slate-500 outline-none transition duration-150 resize-y box-border disabled:opacity-60 ${
                                             hasSubmitted && errors.message
                                                 ? 'border-2 border-red-500 bg-red-950/15 focus:ring-2 focus:ring-red-500/20'
@@ -522,7 +522,7 @@ function Contact() {
                                             className="!mt-0.5 w-4 h-4 rounded border-slate-700 text-blue-600 accent-blue-600 shrink-0 cursor-pointer"
                                         />
                                         <span>
-                                            Akceptuję politykę prywatności i zgadzam się na kontakt w sprawie zapytania <span className="text-red-400">*</span>
+                                            I accept the privacy policy and agree to be contacted regarding my inquiry <span className="text-red-400">*</span>
                                         </span>
                                     </label>
                                     {hasSubmitted && errors.acceptedPrivacy && (
@@ -536,7 +536,7 @@ function Contact() {
                                     disabled={isSubmitting}
                                     className="w-full h-12 bg-blue-600 hover:bg-blue-500 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-base rounded-lg transition duration-150 shadow-md cursor-pointer !mt-2"
                                 >
-                                    {isSubmitting ? 'Wysyłanie...' : 'Wyślij wiadomość'}
+                                    {isSubmitting ? 'Sending...' : 'Send Message'}
                                 </button>
                             </form>
                         </div>
