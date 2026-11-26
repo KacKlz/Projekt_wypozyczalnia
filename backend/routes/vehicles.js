@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const Vehicle = require("../models/Vehicle");
 
 const router = express.Router();
@@ -31,6 +32,31 @@ router.get("/", async (req, res) => {
     } catch (error) {
         console.error("Blad pobierania pojazdow:", error);
         res.status(500).json({ message: "Nie udalo sie pobrac listy pojazdow" });
+    }
+});
+
+router.patch("/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Nieprawidlowe ID pojazdu" });
+        }
+
+        const updatedVehicle = await Vehicle.findByIdAndUpdate(
+            id,
+            { $set: { is_rented: true } },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedVehicle) {
+            return res.status(404).json({ message: "Nie znaleziono pojazdu" });
+        }
+
+        res.json(updatedVehicle);
+    } catch (error) {
+        console.error("Blad rezerwacji pojazdu:", error);
+        res.status(500).json({ message: "Nie udalo sie zarezerwowac pojazdu" });
     }
 });
 

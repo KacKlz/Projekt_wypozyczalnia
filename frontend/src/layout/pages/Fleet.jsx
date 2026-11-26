@@ -2,34 +2,17 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 const API_URL = 'http://localhost:3001/api/vehicles';
-const BODY_TYPES = ['Compact', 'SUV', 'Premium', 'Van / Bus'];
-const TRANSMISSIONS = ['Any', 'Automatic', 'Manual'];
-const FUEL_TYPES = ['All', 'Petrol', 'Diesel', 'Hybrid', 'Electric'];
 const ITEMS_PER_PAGE = 6;
-
-const DEFAULT_FILTERS = {
-    bodyTypes: [],
-    transmission: 'Any',
-    fuelType: 'All',
-    doorsFilter: 'Any',
-    maxPrice: 300,
-};
 
 function Fleet() {
     const navigate = useNavigate();
-
-    const [selectedBodies, setSelectedBodies] = useState(DEFAULT_FILTERS.bodyTypes);
-    const [transmission, setTransmission] = useState(DEFAULT_FILTERS.transmission);
-    const [fuelType, setFuelType] = useState(DEFAULT_FILTERS.fuelType);
-    const [doorsFilter, setDoorsFilter] = useState(DEFAULT_FILTERS.doorsFilter);
-    const [maxPrice, setMaxPrice] = useState(DEFAULT_FILTERS.maxPrice);
-
-    const [appliedFilters, setAppliedFilters] = useState(DEFAULT_FILTERS);
 
     const [sortBy, setSortBy] = useState('price-asc');
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [bookingError, setBookingError] = useState('');
+    const [bookingId, setBookingId] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {
@@ -61,73 +44,44 @@ function Fleet() {
         return () => controller.abort();
     }, []);
 
-    const doorsOptions = useMemo(() => {
-        const uniqueDoors = Array.from(
-            new Set(
-                vehicles
-                    .map((v) => Number(v.doors))
-                    .filter((d) => Number.isFinite(d) && d > 0)
-            )
-        ).sort((a, b) => a - b);
+    const handleBookVehicle = async (vehicle) => {
+        const vehicleId = vehicle._id ?? vehicle.id;
+        if (vehicle.is_rented || bookingId === vehicleId) return;
 
-        return ['Any', ...uniqueDoors.map(String)];
-    }, [vehicles]);
+        setBookingId(vehicleId);
+        setBookingError('');
 
-    const toggleBodyType = (type) => {
-        setSelectedBodies((prev) =>
-            prev.includes(type) ? prev.filter((item) => item !== type) : [...prev, type]
-        );
-    };
+        try {
+            const response = await fetch(`${API_URL}/${vehicleId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_rented: true }),
+            });
 
-    const handleApplyFilters = (e) => {
-        e.preventDefault();
-        setAppliedFilters({
-            bodyTypes: selectedBodies,
-            transmission,
-            fuelType,
-            doorsFilter,
-            maxPrice,
-        });
-        setCurrentPage(1);
-    };
+            const data = await response.json().catch(() => null);
 
-    const filteredAndSortedVehicles = useMemo(() => {
-        const normalizedBodies = appliedFilters.bodyTypes.map((b) => b.toLowerCase());
+            if (!response.ok) {
+                throw new Error(data?.message || `HTTP ${response.status}`);
+            }
 
-        const filtered = vehicles.filter((vehicle) => {
-            const vehicleBody = (vehicle.body_type || vehicle.bodyType || '').toLowerCase();
-            const vehicleTransmission = (vehicle.transmission || '').toLowerCase();
-            const vehicleFuel = (vehicle.fuel_type || '').toLowerCase();
-            const vehicleDoors = Number(vehicle.doors ?? 0);
-            const vehiclePrice = Number(vehicle.daily_rate ?? 0);
-
-            const matchesBody =
-                normalizedBodies.length === 0 || normalizedBodies.includes(vehicleBody);
-
-            const matchesTransmission =
-                appliedFilters.transmission === 'Any' ||
-                vehicleTransmission === appliedFilters.transmission.toLowerCase();
-
-            const matchesFuel =
-                appliedFilters.fuelType === 'All' ||
-                vehicleFuel === appliedFilters.fuelType.toLowerCase();
-
-            const matchesDoors =
-                appliedFilters.doorsFilter === 'Any' ||
-                vehicleDoors === Number(appliedFilters.doorsFilter);
-
-            const matchesPrice = vehiclePrice <= appliedFilters.maxPrice;
-
-            return (
-                matchesBody &&
-                matchesTransmission &&
-                matchesFuel &&
-                matchesDoors &&
-                matchesPrice
+            setVehicles((prev) =>
+                prev.map((item) => {
+                    const itemId = item._id ?? item.id;
+                    return itemId === vehicleId
+                        ? { ...item, ...(data || {}), is_rented: true }
+                        : item;
+                })
             );
-        });
+        } catch (err) {
+            console.error('Booking error:', err);
+            setBookingError(err.message || 'Could not reserve the vehicle.');
+        } finally {
+            setBookingId(null);
+        }
+    };
 
-        return [...filtered].sort((a, b) => {
+    const sortedVehicles = useMemo(() => {
+        return [...vehicles].sort((a, b) => {
             if (sortBy === 'price-asc') {
                 return Number(a.daily_rate) - Number(b.daily_rate);
             }
@@ -141,12 +95,12 @@ function Fleet() {
             }
             return 0;
         });
-    }, [vehicles, appliedFilters, sortBy]);
+    }, [vehicles, sortBy]);
 
-    const totalPages = Math.max(1, Math.ceil(filteredAndSortedVehicles.length / ITEMS_PER_PAGE));
+    const totalPages = Math.max(1, Math.ceil(sortedVehicles.length / ITEMS_PER_PAGE));
     const safePage = Math.min(currentPage, totalPages);
     const startIndex = (safePage - 1) * ITEMS_PER_PAGE;
-    const paginatedVehicles = filteredAndSortedVehicles.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    const paginatedVehicles = sortedVehicles.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
@@ -195,55 +149,8 @@ function Fleet() {
                     </div>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-[#111827] p-6 shadow-xl">
-                    <h2 className="mb-5 text-xl font-semibold text-white">
-                        Search Vehicle
-                    </h2>
-
-                    <div className="mb-4 flex flex-col gap-1.5">
-                        <label className="text-xs font-medium text-slate-300">
-                            Location
-                        </label>
-                        <select className="rounded-xl border border-slate-700 bg-[#0b1120] px-3.5 py-2.5 text-sm text-white outline-none transition focus:border-blue-500">
-                            <option>Warsaw</option>
-                            <option>Krakow</option>
-                            <option>Gdansk</option>
-                        </select>
-                    </div>
-
-                    <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-medium text-slate-300">
-                                Pickup Date
-                            </label>
-                            <input
-                                type="date"
-                                className="rounded-xl border border-slate-700 bg-[#0b1120] px-3.5 py-2.5 text-sm text-white outline-none transition focus:border-blue-500"
-                            />
-                        </div>
-
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-medium text-slate-300">
-                                Return Date
-                            </label>
-                            <input
-                                type="date"
-                                className="rounded-xl border border-slate-700 bg-[#0b1120] px-3.5 py-2.5 text-sm text-white outline-none transition focus:border-blue-500"
-                            />
-                        </div>
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                            document
-                                .getElementById('fleet-section')
-                                ?.scrollIntoView({ behavior: 'smooth' })
-                        }
-                        className="w-full cursor-pointer rounded-xl bg-blue-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-400"
-                    >
-                        Search Vehicles
-                    </button>
+                <div className="rounded-2xl border border-white/10 bg-[#111827] p-6 text-sm text-slate-400 shadow-xl">
+                    There will be search section
                 </div>
             </section>
 
@@ -259,7 +166,7 @@ function Fleet() {
                     <span className="text-sm font-medium text-slate-300">
                         {loading
                             ? 'Loading vehicles...'
-                            : `Found ${filteredAndSortedVehicles.length} vehicles`}
+                            : `Found ${sortedVehicles.length} vehicles`}
                     </span>
 
                     <div className="flex items-center gap-2.5">
@@ -286,230 +193,100 @@ function Fleet() {
                 </div>
 
                 <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[260px_1fr]">
-                    <aside className="rounded-2xl border border-white/10 bg-[#111827] p-5">
-                        <h3 className="mb-4 text-lg font-semibold text-white">Filters</h3>
-
-                        <form onSubmit={handleApplyFilters} className="space-y-5">
-                            <div className="space-y-0.5">
-                                <span className="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
-                                    Body type
-                                </span>
-                                {BODY_TYPES.map((type) => {
-                                    const checked = selectedBodies.includes(type);
-                                    return (
-                                        <label
-                                            key={type}
-                                            className="group flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-sm text-slate-300 transition hover:bg-white/[0.04] hover:text-white"
-                                        >
-                                            <span className="relative flex h-4 w-4 shrink-0 items-center justify-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={checked}
-                                                    onChange={() => toggleBodyType(type)}
-                                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-[5px] border border-slate-600 bg-[#0b1120] transition checked:border-blue-500 checked:bg-blue-500 group-hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                                                />
-                                                <svg
-                                                    viewBox="0 0 16 16"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2.4"
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    className="pointer-events-none absolute h-3 w-3 text-white opacity-0 transition-opacity peer-checked:opacity-100"
-                                                >
-                                                    <path d="M3.5 8.5 6.5 11.5 12.5 4.5" />
-                                                </svg>
-                                            </span>
-                                            <span className={checked ? 'font-medium text-white' : ''}>
-                                                {type}
-                                            </span>
-                                        </label>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="space-y-0.5 border-t border-white/10 pt-4">
-                                <span className="mb-1.5 block text-xs font-semibold tracking-wider text-slate-400 uppercase">
-                                    Transmission
-                                </span>
-                                {TRANSMISSIONS.map((item) => {
-                                    const checked = transmission === item;
-                                    return (
-                                        <label
-                                            key={item}
-                                            className="group flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-sm text-slate-300 transition hover:bg-white/[0.04] hover:text-white"
-                                        >
-                                            <span className="relative flex h-4 w-4 shrink-0 items-center justify-center">
-                                                <input
-                                                    type="radio"
-                                                    name="transmission"
-                                                    checked={checked}
-                                                    onChange={() => setTransmission(item)}
-                                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border border-slate-600 bg-[#0b1120] transition checked:border-blue-500 group-hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                                                />
-                                                <span className="pointer-events-none absolute h-2 w-2 scale-0 rounded-full bg-blue-500 transition-transform peer-checked:scale-100" />
-                                            </span>
-                                            <span className={checked ? 'font-medium text-white' : ''}>
-                                                {item}
-                                            </span>
-                                        </label>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="space-y-1.5 border-t border-white/10 pt-4">
-                                <label
-                                    htmlFor="fleet-fuel"
-                                    className="block text-xs font-semibold tracking-wider text-slate-400 uppercase"
-                                >
-                                    Fuel
-                                </label>
-                                <select
-                                    id="fleet-fuel"
-                                    value={fuelType}
-                                    onChange={(e) => setFuelType(e.target.value)}
-                                    className="w-full rounded-xl border border-slate-700 bg-[#0b1120] px-3 py-2 text-sm text-white outline-none transition focus:border-blue-500"
-                                >
-                                    {FUEL_TYPES.map((fuel) => (
-                                        <option key={fuel} value={fuel}>
-                                            {fuel}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="space-y-1.5 border-t border-white/10 pt-4">
-                                <label
-                                    htmlFor="fleet-doors"
-                                    className="block text-xs font-semibold tracking-wider text-slate-400 uppercase"
-                                >
-                                    Doors
-                                </label>
-                                <select
-                                    id="fleet-doors"
-                                    value={doorsFilter}
-                                    onChange={(e) => setDoorsFilter(e.target.value)}
-                                    className="w-full rounded-xl border border-slate-700 bg-[#0b1120] px-3 py-2 text-sm text-white outline-none transition focus:border-blue-500"
-                                >
-                                    {doorsOptions.map((option) => (
-                                        <option key={option} value={option}>
-                                            {option === 'Any' ? 'Any' : `${option} doors`}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="space-y-2 border-t border-white/10 pt-4">
-                                <div className="flex items-center justify-between">
-                                    <label
-                                        htmlFor="fleet-max-price"
-                                        className="text-xs font-semibold tracking-wider text-slate-400 uppercase"
-                                    >
-                                        Max price / day
-                                    </label>
-                                    <span className="text-xs font-semibold text-blue-400">
-                                        {maxPrice} PLN
-                                    </span>
-                                </div>
-                                <input
-                                    id="fleet-max-price"
-                                    type="range"
-                                    min={20}
-                                    max={300}
-                                    step={5}
-                                    value={maxPrice}
-                                    onChange={(e) => setMaxPrice(Number(e.target.value))}
-                                    className="w-full cursor-pointer accent-blue-500"
-                                />
-                            </div>
-
-                            <button
-                                type="submit"
-                                className="w-full cursor-pointer rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-400"
-                            >
-                                Apply Filters
-                            </button>
-                        </form>
-                    </aside>
+                    <div className="rounded-2xl border border-white/10 bg-[#111827] p-5 text-sm text-slate-400">
+                        There will be filters section
+                    </div>
 
                     <div className="min-w-0">
+                        {bookingError && (
+                            <div className="mb-4 rounded-2xl border border-red-500/30 bg-red-950/40 p-4 text-center text-sm text-red-200">
+                                {bookingError}
+                            </div>
+                        )}
+
                         {error && (
                             <div className="rounded-2xl border border-red-500/30 bg-red-950/40 p-6 text-center text-sm text-red-200">
                                 {error}
                             </div>
                         )}
 
-                        {!loading && !error && filteredAndSortedVehicles.length === 0 && (
+                        {!loading && !error && sortedVehicles.length === 0 && (
                             <div className="rounded-2xl border border-white/10 bg-[#111827] p-8 text-center text-sm text-slate-400">
                                 No vehicles found.
                             </div>
                         )}
 
-                        {!loading && !error && filteredAndSortedVehicles.length > 0 && (
+                        {!loading && !error && sortedVehicles.length > 0 && (
                             <>
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-                                    {paginatedVehicles.map((vehicle) => (
-                                        <article
-                                            key={vehicle._id}
-                                            className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#111827] transition hover:border-blue-500/40"
-                                        >
-                                            <div className="flex h-32 items-start justify-between bg-gradient-to-br from-slate-800 to-slate-900 p-4">
-                                                <span
-                                                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                                                        vehicle.is_rented
-                                                            ? 'bg-amber-500/15 text-amber-300'
-                                                            : 'bg-emerald-500/15 text-emerald-300'
-                                                    }`}
-                                                >
-                                                    {vehicle.is_rented ? 'Rented' : 'Available'}
-                                                </span>
-                                                <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
-                                                    {vehicle.fuel_type}
-                                                </span>
-                                            </div>
+                                    {paginatedVehicles.map((vehicle) => {
+                                        const vehicleId = vehicle._id ?? vehicle.id;
+                                        const isBookingThis = bookingId === vehicleId;
+                                        const isUnavailable = Boolean(vehicle.is_rented) || isBookingThis;
 
-                                            <div className="flex flex-1 flex-col p-5">
-                                                <h3 className="text-lg font-bold text-white">
-                                                    {vehicle.make} {vehicle.model}
-                                                </h3>
-
-                                                <p className="mt-1.5 text-xs text-slate-400">
-                                                    {vehicle.fuel_type} · {vehicle.doors} doors ·{' '}
-                                                    {vehicle.avg_fuel_consumption} L/100km
-                                                </p>
-
-                                                <p className="mt-2 text-xs text-slate-400">
-                                                    Mileage: {vehicle.mileage?.toLocaleString()} km
-                                                </p>
-
-                                                <div className="mt-auto flex items-center justify-between gap-3 border-t border-white/10 pt-4">
-                                                    <span className="text-lg font-bold text-white">
-                                                        {vehicle.daily_rate} PLN{' '}
-                                                        <span className="text-xs font-normal text-slate-400">
-                                                            / day
-                                                        </span>
-                                                    </span>
-
-                                                    <button
-                                                        type="button"
-                                                        disabled={vehicle.is_rented}
-                                                        onClick={() =>
-                                                            navigate('/booking', {
-                                                                state: { vehicle },
-                                                            })
-                                                        }
-                                                        className={`rounded-xl px-4 py-2 text-xs font-semibold transition ${
+                                        return (
+                                            <article
+                                                key={vehicleId}
+                                                className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#111827] transition hover:border-blue-500/40"
+                                            >
+                                                <div className="flex h-32 items-start justify-between bg-gradient-to-br from-slate-800 to-slate-900 p-4">
+                                                    <span
+                                                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                                                             vehicle.is_rented
-                                                                ? 'cursor-not-allowed bg-slate-800 text-slate-500'
-                                                                : 'cursor-pointer bg-blue-500 text-white hover:bg-blue-400'
+                                                                ? 'bg-amber-500/15 text-amber-300'
+                                                                : 'bg-emerald-500/15 text-emerald-300'
                                                         }`}
                                                     >
-                                                        {vehicle.is_rented ? 'Unavailable' : 'Book'}
-                                                    </button>
+                                                        {vehicle.is_rented ? 'Rented' : 'Available'}
+                                                    </span>
+                                                    <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                                                        {vehicle.fuel_type}
+                                                    </span>
                                                 </div>
-                                            </div>
-                                        </article>
-                                    ))}
+
+                                                <div className="flex flex-1 flex-col p-5">
+                                                    <h3 className="text-lg font-bold text-white">
+                                                        {vehicle.make} {vehicle.model}
+                                                    </h3>
+
+                                                    <p className="mt-1.5 text-xs text-slate-400">
+                                                        {vehicle.fuel_type} · {vehicle.doors} doors ·{' '}
+                                                        {vehicle.avg_fuel_consumption} L/100km
+                                                    </p>
+
+                                                    <p className="mt-2 text-xs text-slate-400">
+                                                        Mileage: {vehicle.mileage?.toLocaleString()} km
+                                                    </p>
+
+                                                    <div className="mt-auto flex items-center justify-between gap-3 border-t border-white/10 pt-4">
+                                                        <span className="text-lg font-bold text-white">
+                                                            {vehicle.daily_rate} PLN{' '}
+                                                            <span className="text-xs font-normal text-slate-400">
+                                                                / day
+                                                            </span>
+                                                        </span>
+
+                                                        <button
+                                                            type="button"
+                                                            disabled={isUnavailable}
+                                                            onClick={() => handleBookVehicle(vehicle)}
+                                                            className={`rounded-xl px-4 py-2 text-xs font-semibold transition ${
+                                                                isUnavailable
+                                                                    ? 'cursor-not-allowed bg-slate-800 text-slate-500'
+                                                                    : 'cursor-pointer bg-blue-500 text-white hover:bg-blue-400'
+                                                            }`}
+                                                        >
+                                                            {isBookingThis
+                                                                ? 'Booking...'
+                                                                : vehicle.is_rented
+                                                                    ? 'Unavailable'
+                                                                    : 'Book'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </article>
+                                        );
+                                    })}
                                 </div>
 
                                 {totalPages > 1 && (
