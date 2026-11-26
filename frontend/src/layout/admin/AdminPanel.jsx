@@ -105,7 +105,7 @@ function AdminPanel() {
         <main className="flex-1 w-full max-w-[1280px] !mx-auto !px-4 sm:!px-8 !pt-10 !pb-16">
             <div className="!mb-7">
                 <h2 className="!mb-2 text-[1.75rem] font-bold text-white">Admin panel</h2>
-                <p className="text-[0.95rem] text-[#94a3b8]">Add, edit and remove cars from the fleet</p>
+                <p className="text-[0.95rem] text-slate-400">Add, edit and remove cars from the fleet</p>
             </div>
 
             {message && (
@@ -122,7 +122,7 @@ function AdminPanel() {
             />
 
             {isLoading ? (
-                <p className="!py-8 text-center text-[#94a3b8]">Loading cars...</p>
+                <p className="!py-8 text-center text-slate-400">Loading cars...</p>
             ) : (
                 <AdminCarsTable
                     cars={cars}

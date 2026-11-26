@@ -84,7 +84,7 @@ function AdminCarForm({ car, onSave, onCancel }) {
 
     return (
         <form
-            className="!mb-8 !p-7 bg-[#151e32] border border-white/8 rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.3)]"
+            className="!mb-8 !p-7 bg-[#151e32] border border-white/10 rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.3)]"
             onSubmit={handleSubmit}
         >
             <h3 className="!mb-5 text-[1.15rem] font-bold text-white">
@@ -140,13 +140,13 @@ function AdminCarForm({ car, onSave, onCancel }) {
                     <input type="number" name="avg_fuel_consumption" min="0" step="any" placeholder="4.5" value={form.avg_fuel_consumption} onChange={handleChange} />
                 </div>
 
-                <label className="flex items-center gap-[0.6rem] !mb-5 !py-3 text-[0.875rem] font-semibold text-[#cbd5e1] cursor-pointer">
+                <label className="flex items-center gap-[0.6rem] !mb-5 !py-3 text-[0.875rem] font-semibold text-slate-300 cursor-pointer">
                     <input
                         type="checkbox"
                         name="is_rented"
                         checked={form.is_rented}
                         onChange={handleChange}
-                        className="w-[1.1rem] h-[1.1rem] accent-[#3b82f6] cursor-pointer"
+                        className="w-[1.1rem] h-[1.1rem] accent-blue-500 cursor-pointer"
                     />
                     Currently rented
                 </label>
@@ -155,7 +155,7 @@ function AdminCarForm({ car, onSave, onCancel }) {
             <div className="flex gap-4">
                 <button
                     type="submit"
-                    className="!mt-2 !px-8 !py-[0.85rem] bg-[#3b82f6] rounded-lg text-[1rem] font-semibold text-white cursor-pointer transition-colors duration-200 hover:bg-[#2563eb]"
+                    className="!mt-2 !px-8 !py-[0.85rem] bg-blue-600 rounded-lg text-[1rem] font-semibold text-white cursor-pointer transition-colors duration-200 hover:bg-blue-500"
                 >
                     {car ? 'Save changes' : 'Add car'}
                 </button>
@@ -163,7 +163,7 @@ function AdminCarForm({ car, onSave, onCancel }) {
                 {car && (
                     <button
                         type="button"
-                        className="!mt-2 !px-8 !py-[0.85rem] border border-[#334155] rounded-lg text-[1rem] font-semibold text-[#cbd5e1] cursor-pointer transition-colors duration-200 hover:border-[#94a3b8] hover:text-white"
+                        className="!mt-2 !px-8 !py-[0.85rem] border border-slate-700 rounded-lg text-[1rem] font-semibold text-slate-300 cursor-pointer transition-colors duration-200 hover:border-slate-400 hover:text-white"
                         onClick={onCancel}
                     >
                         Cancel
