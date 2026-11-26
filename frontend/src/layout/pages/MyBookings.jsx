@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Link } from 'react-router';
 
+const getBookingId = (item) => String(item.id ?? item._id);
+
 // SVG Icons
 const Icons = {
     Calendar: () => (
@@ -89,17 +91,14 @@ const getDotClasses = (status) => {
 const statCards = [
     { key: 'total', label: 'Total Orders', Icon: Icons.Car },
     { key: 'active', label: 'Active Now', Icon: Icons.Key },
-    { key: 'upcoming', label: 'Upcoming', Icon: Icons.Clock },
-    { key: 'completed', label: 'Completed', Icon: Icons.Check }
+    { key: 'upcoming', label: 'Upcoming', Icon: Icons.Clock }
 ];
 
 // Tab config
 const tabs = [
     { key: 'all', label: 'All', stat: 'total' },
     { key: 'active', label: 'Active', stat: 'active' },
-    { key: 'upcoming', label: 'Upcoming', stat: 'upcoming' },
-    { key: 'completed', label: 'Completed', stat: 'completed' },
-    { key: 'cancelled', label: 'Cancelled', stat: 'cancelled' }
+    { key: 'upcoming', label: 'Upcoming', stat: 'upcoming' }
 ];
 
 function MyBookings() {
@@ -127,7 +126,17 @@ function MyBookings() {
                 throw new Error(errData.message || 'Failed to load bookings.');
             }
             const data = await response.json();
-            setBookings(Array.isArray(data) && data.length > 0 ? data : null);
+            if (!Array.isArray(data) || data.length === 0) {
+                setBookings(null);
+                return;
+            }
+
+            // Usuń zakończone ('completed') oraz wszystkie anulowane ('cancelled') przy ładowaniu/odświeżeniu strony
+            const visibleBookings = data.filter(
+                (item) => item.status !== 'completed' && item.status !== 'cancelled'
+            );
+
+            setBookings(visibleBookings.length > 0 ? visibleBookings : null);
         } catch (err) {
             setFetchError(err.message || 'Error connecting to the server.');
         } finally {
@@ -154,13 +163,11 @@ function MyBookings() {
             if (!response.ok) {
                 throw new Error(data.message || 'Failed to return vehicle.');
             }
+            // Zakończone wypożyczenie usuwamy od razu z widoku
             setBookings((prev) => {
                 if (!prev) return null;
-                return prev.map((b) =>
-                    b.id === bookingId || b._id === bookingId
-                        ? { ...b, status: 'completed', statusLabel: 'Completed', paymentStatus: 'Settled & Invoiced' }
-                        : b
-                );
+                const remaining = prev.filter((b) => getBookingId(b) !== String(bookingId));
+                return remaining.length > 0 ? remaining : null;
             });
             setNotice({ type: 'success', text: `Vehicle for reservation #${bookingId} has been successfully returned.` });
         } catch (err) {
@@ -185,15 +192,17 @@ function MyBookings() {
             if (!response.ok) {
                 throw new Error(data.message || 'Failed to cancel reservation.');
             }
+
+            // Zostaw pozycję na ekranie — zniknie dopiero po odświeżeniu strony
             setBookings((prev) => {
                 if (!prev) return null;
                 return prev.map((b) =>
-                    b.id === bookingId || b._id === bookingId
+                    getBookingId(b) === String(bookingId)
                         ? { ...b, status: 'cancelled', statusLabel: 'Cancelled', paymentStatus: 'Refunded' }
                         : b
                 );
             });
-            setNotice({ type: 'success', text: `Reservation #${bookingId} has been successfully cancelled.` });
+            setNotice({ type: 'success', text: `Reservation #${bookingId} has been cancelled. It will disappear after refreshing the page.` });
         } catch (err) {
             setNotice({ type: 'error', text: err.message || 'Failed to cancel reservation.' });
         } finally {
@@ -212,14 +221,12 @@ function MyBookings() {
 
     const stats = useMemo(() => {
         if (!bookings || !Array.isArray(bookings)) {
-            return { total: 0, active: 0, upcoming: 0, completed: 0, cancelled: 0 };
+            return { total: 0, active: 0, upcoming: 0 };
         }
         return {
             total: bookings.length,
             active: bookings.filter((b) => b.status === 'active').length,
-            upcoming: bookings.filter((b) => b.status === 'upcoming').length,
-            completed: bookings.filter((b) => b.status === 'completed').length,
-            cancelled: bookings.filter((b) => b.status === 'cancelled').length
+            upcoming: bookings.filter((b) => b.status === 'upcoming').length
         };
     }, [bookings]);
 
@@ -233,7 +240,7 @@ function MyBookings() {
             const matchesSearch =
                 query === '' ||
                 (b.carName && b.carName.toLowerCase().includes(query)) ||
-                (b.id && b.id.toLowerCase().includes(query)) ||
+                (b.id && String(b.id).toLowerCase().includes(query)) ||
                 (b.plate && b.plate.toLowerCase().includes(query)) ||
                 (b.pickupLocation && b.pickupLocation.toLowerCase().includes(query)) ||
                 (b.returnLocation && b.returnLocation.toLowerCase().includes(query));
@@ -260,7 +267,7 @@ function MyBookings() {
             </div>
 
             {/* Stats grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                 {statCards.map(({ key, label, Icon }) => (
                     <div key={key} className="flex items-center gap-3 bg-[#151e32] border border-white/[0.08] rounded-xl px-5 py-4">
                         <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-500/10 text-blue-400 shrink-0">
@@ -361,7 +368,8 @@ function MyBookings() {
             ) : bookings && filteredBookings.length > 0 ? (
                 <div className="flex flex-col gap-5">
                     {filteredBookings.map((item) => {
-                        const isExpanded = expandedIds.has(item.id);
+                        const bookingKey = getBookingId(item);
+                        const isExpanded = expandedIds.has(bookingKey);
                         const hasDetails = item.details && (
                             item.details.insurance ||
                             item.details.deposit ||
@@ -371,11 +379,11 @@ function MyBookings() {
                         );
 
                         return (
-                            <div key={item.id} className="bg-[#151e32] border border-white/[0.08] rounded-xl shadow-lg overflow-hidden transition-shadow duration-200 hover:shadow-xl hover:shadow-black/20">
+                            <div key={bookingKey} className="bg-[#151e32] border border-white/[0.08] rounded-xl shadow-lg overflow-hidden transition-shadow duration-200 hover:shadow-xl hover:shadow-black/20">
                                 {/* Card header */}
                                 <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06] bg-white/[0.02]">
                                     <div className="flex items-center gap-3">
-                                        <span className="text-sm font-bold text-white font-mono">#{item.id}</span>
+                                        <span className="text-sm font-bold text-white font-mono">#{item.id ?? item._id}</span>
                                         {item.createdAt && (
                                             <span className="text-xs text-slate-500">Booked on {item.createdAt}</span>
                                         )}
@@ -489,7 +497,7 @@ function MyBookings() {
                                         <button
                                             type="button"
                                             className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-blue-400 transition-colors bg-transparent border-none cursor-pointer font-medium"
-                                            onClick={() => handleToggleExpand(item.id)}
+                                            onClick={() => handleToggleExpand(bookingKey)}
                                         >
                                             <span>{isExpanded ? 'Hide details' : 'View details'}</span>
                                             <Icons.Chevron open={isExpanded} />
@@ -502,22 +510,22 @@ function MyBookings() {
                                                 <button
                                                     type="button"
                                                     className="px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors cursor-pointer border-none disabled:opacity-50 disabled:cursor-not-allowed"
-                                                    disabled={returningId === item.id}
-                                                    onClick={() => handleReturnBooking(item.id)}
+                                                    disabled={returningId === bookingKey}
+                                                    onClick={() => handleReturnBooking(bookingKey)}
                                                 >
-                                                    {returningId === item.id ? 'Returning...' : 'Return vehicle'}
+                                                    {returningId === bookingKey ? 'Returning...' : 'Return vehicle'}
                                                 </button>
                                                 <button
                                                     type="button"
                                                     className="px-4 py-2 rounded-lg bg-white/[0.06] text-slate-300 text-sm font-semibold hover:bg-white/[0.1] transition-colors cursor-pointer border border-white/[0.08]"
-                                                    onClick={() => handleActionClick(`Extension request sent for #${item.id}.`)}
+                                                    onClick={() => handleActionClick(`Extension request sent for #${bookingKey}.`)}
                                                 >
                                                     Extend rental
                                                 </button>
                                                 <button
                                                     type="button"
                                                     className="px-4 py-2 rounded-lg bg-white/[0.06] text-slate-300 text-sm font-semibold hover:bg-white/[0.1] transition-colors cursor-pointer border border-white/[0.08]"
-                                                    onClick={() => handleActionClick(`Rental pass for #${item.id} generated.`)}
+                                                    onClick={() => handleActionClick(`Rental pass for #${bookingKey} generated.`)}
                                                 >
                                                     Digital Key Pass
                                                 </button>
@@ -529,43 +537,25 @@ function MyBookings() {
                                                 <button
                                                     type="button"
                                                     className="px-4 py-2 rounded-lg bg-red-500/15 text-red-400 text-sm font-semibold hover:bg-red-500/25 transition-colors cursor-pointer border border-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                    disabled={cancellingId === item.id}
-                                                    onClick={() => handleCancelBooking(item.id)}
+                                                    disabled={cancellingId === bookingKey}
+                                                    onClick={() => handleCancelBooking(bookingKey)}
                                                 >
-                                                    {cancellingId === item.id ? 'Cancelling...' : 'Cancel'}
+                                                    {cancellingId === bookingKey ? 'Cancelling...' : 'Cancel'}
                                                 </button>
                                                 <button
                                                     type="button"
                                                     className="px-4 py-2 rounded-lg bg-white/[0.06] text-slate-300 text-sm font-semibold hover:bg-white/[0.1] transition-colors cursor-pointer border border-white/[0.08]"
-                                                    onClick={() => handleActionClick(`Modify window opened for #${item.id}.`)}
+                                                    onClick={() => handleActionClick(`Modify window opened for #${bookingKey}.`)}
                                                 >
                                                     Modify dates
                                                 </button>
                                                 <button
                                                     type="button"
                                                     className="px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors cursor-pointer border-none"
-                                                    onClick={() => handleActionClick(`Voucher PDF for #${item.id} downloaded.`)}
+                                                    onClick={() => handleActionClick(`Voucher PDF for #${bookingKey} downloaded.`)}
                                                 >
                                                     Download voucher
                                                 </button>
-                                            </>
-                                        )}
-
-                                        {item.status === 'completed' && (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    className="px-4 py-2 rounded-lg bg-white/[0.06] text-slate-300 text-sm font-semibold hover:bg-white/[0.1] transition-colors cursor-pointer border border-white/[0.08]"
-                                                    onClick={() => handleActionClick(`Invoice for #${item.id} downloaded.`)}
-                                                >
-                                                    Invoice (PDF)
-                                                </button>
-                                                <Link
-                                                    to="/booking"
-                                                    className="inline-block px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors no-underline"
-                                                >
-                                                    Rent again
-                                                </Link>
                                             </>
                                         )}
 
@@ -574,7 +564,7 @@ function MyBookings() {
                                                 <button
                                                     type="button"
                                                     className="px-4 py-2 rounded-lg bg-white/[0.06] text-slate-300 text-sm font-semibold hover:bg-white/[0.1] transition-colors cursor-pointer border border-white/[0.08]"
-                                                    onClick={() => handleActionClick(`Refund receipt for #${item.id} downloaded.`)}
+                                                    onClick={() => handleActionClick(`Refund receipt for #${bookingKey} downloaded.`)}
                                                 >
                                                     Receipt
                                                 </button>

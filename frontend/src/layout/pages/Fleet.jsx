@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
-
-const API_URL = '/api/vehicles';
+const API_URL = 'http://localhost:3001/api/vehicles';
 const ITEMS_PER_PAGE = 6;
 
 function Fleet() {
@@ -13,7 +12,6 @@ function Fleet() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [bookingError, setBookingError] = useState('');
-    const [bookingSuccess, setBookingSuccess] = useState('');
     const [bookingId, setBookingId] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -25,10 +23,7 @@ function Fleet() {
             setError('');
 
             try {
-                const response = await fetch(API_URL, {
-                    signal: controller.signal,
-                    credentials: 'include'
-                });
+                const response = await fetch(API_URL, { signal: controller.signal });
                 if (!response.ok) {
                     throw new Error('Failed to load vehicles');
                 }
@@ -55,21 +50,15 @@ function Fleet() {
 
         setBookingId(vehicleId);
         setBookingError('');
-        setBookingSuccess('');
 
         try {
             const response = await fetch(`${API_URL}/${vehicleId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
                 body: JSON.stringify({ is_rented: true }),
             });
 
             const data = await response.json().catch(() => null);
-
-            if (response.status === 401) {
-                throw new Error('You must be signed in to book a vehicle.');
-            }
 
             if (!response.ok) {
                 throw new Error(data?.message || `HTTP ${response.status}`);
@@ -83,8 +72,6 @@ function Fleet() {
                         : item;
                 })
             );
-
-            setBookingSuccess(`Vehicle ${vehicle.make} ${vehicle.model} reserved successfully! Check it in My Bookings.`);
         } catch (err) {
             console.error('Booking error:', err);
             setBookingError(err.message || 'Could not reserve the vehicle.');
@@ -211,12 +198,6 @@ function Fleet() {
                     </div>
 
                     <div className="min-w-0">
-                        {bookingSuccess && (
-                            <div className="mb-4 rounded-2xl border border-emerald-500/30 bg-emerald-950/40 p-4 text-center text-sm text-emerald-200">
-                                {bookingSuccess}
-                            </div>
-                        )}
-
                         {bookingError && (
                             <div className="mb-4 rounded-2xl border border-red-500/30 bg-red-950/40 p-4 text-center text-sm text-red-200">
                                 {bookingError}
