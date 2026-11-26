@@ -10,6 +10,7 @@ import About from './layout/pages/About';
 import Contact from './layout/pages/Contact';
 import Booking from './layout/pages/Booking';
 import MyBookings from './layout/pages/MyBookings';
+import AdminPanel from './layout/admin/AdminPanel';
 
 function App() {
     const navigate = useNavigate();
@@ -128,6 +129,18 @@ function App() {
                             <MyBookings />
                         ) : (
                             <Navigate to="/login" replace />
+                        )
+                    }
+                />
+
+                {/* Admin panel - only for admins */}
+                <Route
+                    path="/admin"
+                    element={
+                        user && user.role === 'admin' ? (
+                            <AdminPanel />
+                        ) : (
+                            <Navigate to="/" replace />
                         )
                     }
                 />
