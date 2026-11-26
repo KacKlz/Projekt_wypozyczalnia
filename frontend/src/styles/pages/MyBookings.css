@@ -685,6 +685,67 @@
     margin-bottom: 1.5rem;
 }
 
+.empty-state-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* --------------------------------------------------------------------------
+   Loading & Error States
+   -------------------------------------------------------------------------- */
+.bookings-loading-state {
+    background: #151e32;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 3.5rem 2rem;
+    text-align: center;
+    max-width: 540px;
+    margin: 2.5rem auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.bookings-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(59, 130, 246, 0.2);
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: bookingsSpin 0.8s linear infinite;
+}
+
+@keyframes bookingsSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.bookings-loading-state p {
+    color: #94a3b8;
+    font-size: 0.95rem;
+}
+
+.bookings-error-box {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid #ef4444;
+    border-radius: 12px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    max-width: 540px;
+    margin: 2.5rem auto;
+    color: #fca5a5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
 /* --------------------------------------------------------------------------
    Responsive Design
    -------------------------------------------------------------------------- */

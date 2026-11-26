@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Link } from 'react-router';
 import '../../styles/pages/Page.css';
 import '../../styles/pages/MyBookings.css';
@@ -57,12 +57,123 @@ const Icons = {
 };
 
 function MyBookings() {
-    // Bookings state - currently empty until connected to the backend API / database
-    const [bookings] = useState([]);
+    // Bookings fetched from backend API (/api/bookings/my)
+    const [bookings, setBookings] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [fetchError, setFetchError] = useState(null);
+
     const [activeTab, setActiveTab] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedIds, setExpandedIds] = useState(new Set());
     const [notice, setNotice] = useState(null);
+    const [cancellingId, setCancellingId] = useState(null);
+    const [isSeeding, setIsSeeding] = useState(false);
+
+    // Fetch user bookings from backend
+    const fetchBookings = useCallback(async () => {
+        setIsLoading(true);
+        setFetchError(null);
+        try {
+            const response = await fetch('/api/bookings/my');
+            if (response.status === 401) {
+                throw new Error('Please sign in to view your bookings.');
+            }
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.message || 'Failed to load bookings.');
+            }
+            const data = await response.json();
+            setBookings(Array.isArray(data) ? data : []);
+        } catch (err) {
+            setFetchError(err.message || 'Error connecting to the server.');
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchBookings();
+    }, [fetchBookings]);
+
+    // Cancel booking via backend PATCH /api/bookings/:id/cancel
+    const handleCancelBooking = async (bookingId) => {
+        if (!window.confirm(`Are you sure you want to cancel reservation #${bookingId}?`)) {
+            return;
+        }
+
+        setCancellingId(bookingId);
+        setNotice(null);
+        try {
+            const response = await fetch(`/api/bookings/${bookingId}/cancel`, {
+                method: 'PATCH'
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to cancel reservation.');
+            }
+
+            // Update local state with cancelled status
+            setBookings((prev) =>
+                prev.map((b) =>
+                    b.id === bookingId || b._id === bookingId
+                        ? {
+                              ...b,
+                              status: 'cancelled',
+                              statusLabel: 'Cancelled',
+                              paymentStatus: 'Refunded'
+                          }
+                        : b
+                )
+            );
+
+            setNotice({
+                type: 'success',
+                text: `Reservation #${bookingId} has been successfully cancelled.`
+            });
+        } catch (err) {
+            setNotice({
+                type: 'error',
+                text: err.message || 'Failed to cancel reservation.'
+            });
+        } finally {
+            setCancellingId(null);
+        }
+    };
+
+    // Helper to seed sample demo bookings in database
+    const handleSeedSample = async () => {
+        setIsSeeding(true);
+        setNotice(null);
+        try {
+            const response = await fetch('/api/bookings/seed-sample', {
+                method: 'POST'
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to add sample bookings.');
+            }
+
+            if (data.bookings && Array.isArray(data.bookings)) {
+                setBookings(data.bookings);
+            } else {
+                await fetchBookings();
+            }
+
+            setNotice({
+                type: 'success',
+                text: data.message || 'Sample bookings added to your account.'
+            });
+        } catch (err) {
+            setNotice({
+                type: 'error',
+                text: err.message || 'Failed to generate sample bookings.'
+            });
+        } finally {
+            setIsSeeding(false);
+        }
+    };
 
     // Toggle expanded card details
     const handleToggleExpand = (id) => {
@@ -92,17 +203,17 @@ function MyBookings() {
             const matchesTab = activeTab === 'all' ? true : b.status === activeTab;
             const matchesSearch =
                 query === '' ||
-                b.carName.toLowerCase().includes(query) ||
-                b.id.toLowerCase().includes(query) ||
-                b.plate.toLowerCase().includes(query) ||
-                b.pickupLocation.toLowerCase().includes(query) ||
-                b.returnLocation.toLowerCase().includes(query);
+                (b.carName && b.carName.toLowerCase().includes(query)) ||
+                (b.id && b.id.toLowerCase().includes(query)) ||
+                (b.plate && b.plate.toLowerCase().includes(query)) ||
+                (b.pickupLocation && b.pickupLocation.toLowerCase().includes(query)) ||
+                (b.returnLocation && b.returnLocation.toLowerCase().includes(query));
             return matchesTab && matchesSearch;
         });
     }, [bookings, activeTab, searchQuery]);
 
     const handleActionClick = (message) => {
-        setNotice(message);
+        setNotice({ type: 'info', text: message });
     };
 
     return (
@@ -164,8 +275,12 @@ function MyBookings() {
 
             {/* Notification alert */}
             {notice && (
-                <div className="bookings-alert">
-                    <span>{notice}</span>
+                <div
+                    className={`bookings-alert ${
+                        notice.type === 'error' ? 'bookings-alert-error' : ''
+                    }`}
+                >
+                    <span>{typeof notice === 'string' ? notice : notice.text}</span>
                     <button
                         type="button"
                         className="bookings-alert-close"
@@ -244,8 +359,26 @@ function MyBookings() {
                 </div>
             </div>
 
-            {/* Bookings cards stack */}
-            {filteredBookings.length > 0 ? (
+            {/* Loading state */}
+            {isLoading ? (
+                <div className="bookings-loading-state">
+                    <div className="bookings-spinner" />
+                    <p>Loading your reservations...</p>
+                </div>
+            ) : fetchError ? (
+                /* Error state */
+                <div className="bookings-error-box">
+                    <p>{fetchError}</p>
+                    <button
+                        type="button"
+                        className="btn-action-primary"
+                        onClick={fetchBookings}
+                    >
+                        Retry
+                    </button>
+                </div>
+            ) : filteredBookings.length > 0 ? (
+                /* Bookings cards stack */
                 <div className="bookings-cards-stack">
                     {filteredBookings.map((item) => {
                         const isExpanded = expandedIds.has(item.id);
@@ -256,7 +389,11 @@ function MyBookings() {
                                 <div className="booking-card-header">
                                     <div className="booking-ref-box">
                                         <span className="booking-ref-number">#{item.id}</span>
-                                        <span className="booking-ref-date">Booked on {item.createdAt}</span>
+                                        {item.createdAt && (
+                                            <span className="booking-ref-date">
+                                                Booked on {item.createdAt}
+                                            </span>
+                                        )}
                                     </div>
                                     <div className={`booking-badge ${item.status}`}>
                                         <span className="booking-badge-dot" />
@@ -280,15 +417,21 @@ function MyBookings() {
                                         <div className="vehicle-heading">
                                             <h3>{item.carName}</h3>
                                             <span className="vehicle-category">
-                                                {item.category} • {item.plate}
+                                                {item.category}
+                                                {item.plate ? ` • ${item.plate}` : ''}
                                             </span>
-                                            <div className="vehicle-specs-list">
-                                                {item.specs.map((spec, idx) => (
-                                                    <span key={idx} className="vehicle-spec-pill">
-                                                        {spec}
-                                                    </span>
-                                                ))}
-                                            </div>
+                                            {item.specs && item.specs.length > 0 && (
+                                                <div className="vehicle-specs-list">
+                                                    {item.specs.map((spec, idx) => (
+                                                        <span
+                                                            key={idx}
+                                                            className="vehicle-spec-pill"
+                                                        >
+                                                            {spec}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
@@ -306,9 +449,11 @@ function MyBookings() {
                                             </span>
                                         </div>
 
-                                        <div className="rental-duration-tag">
-                                            Rental duration: {item.duration}
-                                        </div>
+                                        {item.duration && (
+                                            <div className="rental-duration-tag">
+                                                Rental duration: {item.duration}
+                                            </div>
+                                        )}
 
                                         <div className="rental-route-point">
                                             <span className="rental-point-label">Drop-off</span>
@@ -325,7 +470,11 @@ function MyBookings() {
 
                                     {/* Right: Pricing summary */}
                                     <div className="rental-price-box">
-                                        <span className="price-rate-label">{item.dailyRate} / day</span>
+                                        {item.dailyRate && (
+                                            <span className="price-rate-label">
+                                                {item.dailyRate} / day
+                                            </span>
+                                        )}
                                         <div className="price-grand-total">{item.totalPrice}</div>
                                         <span
                                             className={`price-payment-state ${
@@ -344,7 +493,9 @@ function MyBookings() {
                                         className="btn-details-toggle"
                                         onClick={() => handleToggleExpand(item.id)}
                                     >
-                                        <span>{isExpanded ? 'Hide details' : 'View details'}</span>
+                                        <span>
+                                            {isExpanded ? 'Hide details' : 'View details'}
+                                        </span>
                                         <Icons.Chevron open={isExpanded} />
                                     </button>
 
@@ -381,13 +532,14 @@ function MyBookings() {
                                                 <button
                                                     type="button"
                                                     className="btn-action-danger"
+                                                    disabled={cancellingId === item.id}
                                                     onClick={() =>
-                                                        handleActionClick(
-                                                            `Cancellation initiated for ${item.id}.`
-                                                        )
+                                                        handleCancelBooking(item.id)
                                                     }
                                                 >
-                                                    Cancel
+                                                    {cancellingId === item.id
+                                                        ? 'Cancelling...'
+                                                        : 'Cancel'}
                                                 </button>
                                                 <button
                                                     type="button"
@@ -427,7 +579,10 @@ function MyBookings() {
                                                 >
                                                     Invoice (PDF)
                                                 </button>
-                                                <Link to="/booking" className="btn-action-primary">
+                                                <Link
+                                                    to="/booking"
+                                                    className="btn-action-primary"
+                                                >
                                                     Rent again
                                                 </Link>
                                             </>
@@ -446,7 +601,10 @@ function MyBookings() {
                                                 >
                                                     Receipt
                                                 </button>
-                                                <Link to="/fleet" className="btn-action-primary">
+                                                <Link
+                                                    to="/fleet"
+                                                    className="btn-action-primary"
+                                                >
                                                     Browse fleet
                                                 </Link>
                                             </>
@@ -455,14 +613,16 @@ function MyBookings() {
                                 </div>
 
                                 {/* Expandable details panel */}
-                                {isExpanded && (
+                                {isExpanded && item.details && (
                                     <div className="booking-expanded-panel">
                                         <div className="expanded-item">
                                             <h4>Insurance</h4>
                                             <p>{item.details.insurance}</p>
-                                            <p className="meta-note">
-                                                Deposit: <strong>{item.details.deposit}</strong>
-                                            </p>
+                                            {item.details.deposit && (
+                                                <p className="meta-note">
+                                                    Deposit: <strong>{item.details.deposit}</strong>
+                                                </p>
+                                            )}
                                         </div>
 
                                         <div className="expanded-item">
@@ -471,20 +631,28 @@ function MyBookings() {
                                             <p className="meta-note">Fuel policy: Full-to-Full</p>
                                         </div>
 
-                                        <div className="expanded-item">
-                                            <h4>Included options</h4>
-                                            <div className="extras-tags">
-                                                {item.details.extras.map((extra, idx) => (
-                                                    <span key={idx}>{extra}</span>
-                                                ))}
+                                        {item.details.extras && item.details.extras.length > 0 && (
+                                            <div className="expanded-item">
+                                                <h4>Included options</h4>
+                                                <div className="extras-tags">
+                                                    {item.details.extras.map((extra, idx) => (
+                                                        <span key={idx}>{extra}</span>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
 
                                         <div className="expanded-item">
                                             <h4>Emergency contact</h4>
                                             <p>{item.details.support}</p>
                                             <p className="meta-note">
-                                                Questions? <Link to="/contact" style={{ color: '#3b82f6' }}>Contact support</Link>
+                                                Questions?{' '}
+                                                <Link
+                                                    to="/contact"
+                                                    style={{ color: '#3b82f6' }}
+                                                >
+                                                    Contact support
+                                                </Link>
                                             </p>
                                         </div>
                                     </div>
@@ -494,6 +662,7 @@ function MyBookings() {
                     })}
                 </div>
             ) : (
+                /* Empty state when user has no bookings */
                 <div className="bookings-empty-box">
                     <div className="empty-icon-circle">
                         <Icons.Car />
@@ -504,9 +673,21 @@ function MyBookings() {
                             ? `No reservation matches your search "${searchQuery}".`
                             : "You don't have any bookings yet. Choose a car from our fleet and hit the road!"}
                     </p>
-                    <Link to="/booking" className="btn-book-now">
-                        Book a car now
-                    </Link>
+                    <div className="empty-state-actions">
+                        <Link to="/booking" className="btn-book-now">
+                            Book a car now
+                        </Link>
+                        {!searchQuery && (
+                            <button
+                                type="button"
+                                className="btn-action-secondary"
+                                onClick={handleSeedSample}
+                                disabled={isSeeding}
+                            >
+                                {isSeeding ? 'Adding samples...' : 'Add sample bookings (Demo)'}
+                            </button>
+                        )}
+                    </div>
                 </div>
             )}
         </main>
