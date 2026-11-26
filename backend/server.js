@@ -3,7 +3,9 @@ const mongoose = require("mongoose");
 const dns = require("dns");
 const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/auth");
+const vehicleRoutes = require("./routes/vehicles");
 const bookingRoutes = require("./routes/bookings");
+const cors = require("cors");
 
 require("dotenv").config();
 
@@ -18,8 +20,16 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+    cors({
+        origin: "http://localhost:5173",
+        credentials: true,
+    })
+);
+
 
 app.use("/api/auth", authRoutes);
+app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/bookings", bookingRoutes);
 
 if (!process.env.MONGO_URI) {

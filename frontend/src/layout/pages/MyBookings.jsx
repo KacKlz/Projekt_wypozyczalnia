@@ -1,12 +1,10 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Link } from 'react-router';
-import '../../styles/pages/Page.css';
-import '../../styles/pages/MyBookings.css';
 
-// SVG Icons harmonized with app typography and style
+// SVG Icons
 const Icons = {
     Calendar: () => (
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', marginRight: '6px' }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block align-middle mr-1.5">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
             <line x1="16" y1="2" x2="16" y2="6" />
             <line x1="8" y1="2" x2="8" y2="6" />
@@ -14,7 +12,7 @@ const Icons = {
         </svg>
     ),
     MapPin: () => (
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', marginRight: '6px' }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block align-middle mr-1.5">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
             <circle cx="12" cy="10" r="3" />
         </svg>
@@ -26,7 +24,7 @@ const Icons = {
         </svg>
     ),
     Chevron: ({ open }) => (
-        <span style={{ display: 'inline-block', transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', fontSize: '0.85rem' }}>
+        <span className={`inline-block transition-transform duration-200 text-[0.85rem] ${open ? 'rotate-180' : ''}`}>
             ▾
         </span>
     ),
@@ -56,9 +54,56 @@ const Icons = {
     )
 };
 
+// Status badge color helper
+const getBadgeClasses = (status) => {
+    switch (status) {
+        case 'active':
+            return 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
+        case 'upcoming':
+            return 'bg-blue-500/15 text-blue-400 border border-blue-500/30';
+        case 'completed':
+            return 'bg-slate-500/15 text-slate-400 border border-slate-500/30';
+        case 'cancelled':
+            return 'bg-red-500/15 text-red-400 border border-red-500/30';
+        default:
+            return 'bg-slate-500/15 text-slate-400 border border-slate-500/30';
+    }
+};
+
+const getDotClasses = (status) => {
+    switch (status) {
+        case 'active':
+            return 'bg-emerald-400';
+        case 'upcoming':
+            return 'bg-blue-400';
+        case 'completed':
+            return 'bg-slate-400';
+        case 'cancelled':
+            return 'bg-red-400';
+        default:
+            return 'bg-slate-400';
+    }
+};
+
+// Stat cards config
+const statCards = [
+    { key: 'total', label: 'Total Orders', Icon: Icons.Car },
+    { key: 'active', label: 'Active Now', Icon: Icons.Key },
+    { key: 'upcoming', label: 'Upcoming', Icon: Icons.Clock },
+    { key: 'completed', label: 'Completed', Icon: Icons.Check }
+];
+
+// Tab config
+const tabs = [
+    { key: 'all', label: 'All', stat: 'total' },
+    { key: 'active', label: 'Active', stat: 'active' },
+    { key: 'upcoming', label: 'Upcoming', stat: 'upcoming' },
+    { key: 'completed', label: 'Completed', stat: 'completed' },
+    { key: 'cancelled', label: 'Cancelled', stat: 'cancelled' }
+];
+
 function MyBookings() {
-    // Bookings fetched from backend API (/api/bookings/my)
-    const [bookings, setBookings] = useState([]);
+    const [bookings, setBookings] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [fetchError, setFetchError] = useState(null);
 
@@ -67,14 +112,13 @@ function MyBookings() {
     const [expandedIds, setExpandedIds] = useState(new Set());
     const [notice, setNotice] = useState(null);
     const [cancellingId, setCancellingId] = useState(null);
-    const [isSeeding, setIsSeeding] = useState(false);
+    const [returningId, setReturningId] = useState(null);
 
-    // Fetch user bookings from backend
     const fetchBookings = useCallback(async () => {
         setIsLoading(true);
         setFetchError(null);
         try {
-            const response = await fetch('/api/bookings/my');
+            const response = await fetch('/api/bookings/my', { credentials: 'include' });
             if (response.status === 401) {
                 throw new Error('Please sign in to view your bookings.');
             }
@@ -83,7 +127,7 @@ function MyBookings() {
                 throw new Error(errData.message || 'Failed to load bookings.');
             }
             const data = await response.json();
-            setBookings(Array.isArray(data) ? data : []);
+            setBookings(Array.isArray(data) && data.length > 0 ? data : null);
         } catch (err) {
             setFetchError(err.message || 'Error connecting to the server.');
         } finally {
@@ -95,87 +139,68 @@ function MyBookings() {
         fetchBookings();
     }, [fetchBookings]);
 
-    // Cancel booking via backend PATCH /api/bookings/:id/cancel
+    const handleReturnBooking = async (bookingId) => {
+        if (!window.confirm(`Are you sure you want to return the vehicle for reservation #${bookingId}?`)) {
+            return;
+        }
+        setReturningId(bookingId);
+        setNotice(null);
+        try {
+            const response = await fetch(`/api/bookings/${bookingId}/return`, {
+                method: 'PATCH',
+                credentials: 'include'
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to return vehicle.');
+            }
+            setBookings((prev) => {
+                if (!prev) return null;
+                return prev.map((b) =>
+                    b.id === bookingId || b._id === bookingId
+                        ? { ...b, status: 'completed', statusLabel: 'Completed', paymentStatus: 'Settled & Invoiced' }
+                        : b
+                );
+            });
+            setNotice({ type: 'success', text: `Vehicle for reservation #${bookingId} has been successfully returned.` });
+        } catch (err) {
+            setNotice({ type: 'error', text: err.message || 'Failed to return vehicle.' });
+        } finally {
+            setReturningId(null);
+        }
+    };
+
     const handleCancelBooking = async (bookingId) => {
         if (!window.confirm(`Are you sure you want to cancel reservation #${bookingId}?`)) {
             return;
         }
-
         setCancellingId(bookingId);
         setNotice(null);
         try {
             const response = await fetch(`/api/bookings/${bookingId}/cancel`, {
-                method: 'PATCH'
+                method: 'PATCH',
+                credentials: 'include'
             });
             const data = await response.json();
-
             if (!response.ok) {
                 throw new Error(data.message || 'Failed to cancel reservation.');
             }
-
-            // Update local state with cancelled status
-            setBookings((prev) =>
-                prev.map((b) =>
+            setBookings((prev) => {
+                if (!prev) return null;
+                return prev.map((b) =>
                     b.id === bookingId || b._id === bookingId
-                        ? {
-                              ...b,
-                              status: 'cancelled',
-                              statusLabel: 'Cancelled',
-                              paymentStatus: 'Refunded'
-                          }
+                        ? { ...b, status: 'cancelled', statusLabel: 'Cancelled', paymentStatus: 'Refunded' }
                         : b
-                )
-            );
-
-            setNotice({
-                type: 'success',
-                text: `Reservation #${bookingId} has been successfully cancelled.`
+                );
             });
+            setNotice({ type: 'success', text: `Reservation #${bookingId} has been successfully cancelled.` });
         } catch (err) {
-            setNotice({
-                type: 'error',
-                text: err.message || 'Failed to cancel reservation.'
-            });
+            setNotice({ type: 'error', text: err.message || 'Failed to cancel reservation.' });
         } finally {
             setCancellingId(null);
         }
     };
 
-    // Helper to seed sample demo bookings in database
-    const handleSeedSample = async () => {
-        setIsSeeding(true);
-        setNotice(null);
-        try {
-            const response = await fetch('/api/bookings/seed-sample', {
-                method: 'POST'
-            });
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || 'Failed to add sample bookings.');
-            }
-
-            if (data.bookings && Array.isArray(data.bookings)) {
-                setBookings(data.bookings);
-            } else {
-                await fetchBookings();
-            }
-
-            setNotice({
-                type: 'success',
-                text: data.message || 'Sample bookings added to your account.'
-            });
-        } catch (err) {
-            setNotice({
-                type: 'error',
-                text: err.message || 'Failed to generate sample bookings.'
-            });
-        } finally {
-            setIsSeeding(false);
-        }
-    };
-
-    // Toggle expanded card details
     const handleToggleExpand = (id) => {
         setExpandedIds((prev) => {
             const next = new Set(prev);
@@ -185,8 +210,10 @@ function MyBookings() {
         });
     };
 
-    // Calculate count stats
     const stats = useMemo(() => {
+        if (!bookings || !Array.isArray(bookings)) {
+            return { total: 0, active: 0, upcoming: 0, completed: 0, cancelled: 0 };
+        }
         return {
             total: bookings.length,
             active: bookings.filter((b) => b.status === 'active').length,
@@ -196,8 +223,10 @@ function MyBookings() {
         };
     }, [bookings]);
 
-    // Filter list by selected tab & search string
     const filteredBookings = useMemo(() => {
+        if (!bookings || !Array.isArray(bookings)) {
+            return [];
+        }
         const query = searchQuery.trim().toLowerCase();
         return bookings.filter((b) => {
             const matchesTab = activeTab === 'all' ? true : b.status === activeTab;
@@ -217,73 +246,45 @@ function MyBookings() {
     };
 
     return (
-        <main className="page my-bookings-page">
-            {/* Header section */}
-            <div className="bookings-header">
-                <div className="bookings-header-text">
-                    <h1>
-                        My <span className="bookings-highlight">Bookings</span>
+        <main className="w-full max-w-[1200px] mx-auto px-6 md:px-10 py-12">
+            {/* Header */}
+            <div className="mb-8">
+                <div>
+                    <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">
+                        My <span className="text-blue-500">Bookings</span>
                     </h1>
-                    <p className="bookings-subtitle">
+                    <p className="mt-2 text-slate-400 text-base max-w-xl">
                         Manage your active vehicle rentals, review past orders, and view documents.
                     </p>
                 </div>
             </div>
 
-            {/* Quick overview statistics cards */}
-            <div className="bookings-stats-grid">
-                <div className="bookings-stat-card">
-                    <div className="stat-icon-box">
-                        <Icons.Car />
+            {/* Stats grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                {statCards.map(({ key, label, Icon }) => (
+                    <div key={key} className="flex items-center gap-3 bg-[#151e32] border border-white/[0.08] rounded-xl px-5 py-4">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-500/10 text-blue-400 shrink-0">
+                            <Icon />
+                        </div>
+                        <div>
+                            <div className="text-xl font-bold text-white">{stats[key]}</div>
+                            <div className="text-xs text-slate-400 uppercase tracking-wider">{label}</div>
+                        </div>
                     </div>
-                    <div>
-                        <div className="stat-number">{stats.total}</div>
-                        <div className="stat-title">Total Orders</div>
-                    </div>
-                </div>
-
-                <div className="bookings-stat-card">
-                    <div className="stat-icon-box">
-                        <Icons.Key />
-                    </div>
-                    <div>
-                        <div className="stat-number">{stats.active}</div>
-                        <div className="stat-title">Active Now</div>
-                    </div>
-                </div>
-
-                <div className="bookings-stat-card">
-                    <div className="stat-icon-box">
-                        <Icons.Clock />
-                    </div>
-                    <div>
-                        <div className="stat-number">{stats.upcoming}</div>
-                        <div className="stat-title">Upcoming</div>
-                    </div>
-                </div>
-
-                <div className="bookings-stat-card">
-                    <div className="stat-icon-box">
-                        <Icons.Check />
-                    </div>
-                    <div>
-                        <div className="stat-number">{stats.completed}</div>
-                        <div className="stat-title">Completed</div>
-                    </div>
-                </div>
+                ))}
             </div>
 
-            {/* Notification alert */}
+            {/* Notice alert */}
             {notice && (
-                <div
-                    className={`bookings-alert ${
-                        notice.type === 'error' ? 'bookings-alert-error' : ''
-                    }`}
-                >
+                <div className={`flex items-center justify-between gap-3 mb-6 px-5 py-3 rounded-xl text-sm font-medium ${
+                    notice.type === 'error'
+                        ? 'bg-red-500/10 border border-red-500/30 text-red-300'
+                        : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300'
+                }`}>
                     <span>{typeof notice === 'string' ? notice : notice.text}</span>
                     <button
                         type="button"
-                        className="bookings-alert-close"
+                        className="text-current opacity-60 hover:opacity-100 transition-opacity text-lg leading-none cursor-pointer bg-transparent border-none"
                         onClick={() => setNotice(null)}
                     >
                         ✕
@@ -291,58 +292,39 @@ function MyBookings() {
                 </div>
             )}
 
-            {/* Toolbar (Tabs & Search) */}
-            <div className="bookings-toolbar">
-                <div className="bookings-tabs">
-                    <button
-                        type="button"
-                        className={`bookings-tab-btn ${activeTab === 'all' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('all')}
-                    >
-                        <span>All</span>
-                        <span className="tab-badge">{stats.total}</span>
-                    </button>
-                    <button
-                        type="button"
-                        className={`bookings-tab-btn ${activeTab === 'active' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('active')}
-                    >
-                        <span>Active</span>
-                        <span className="tab-badge">{stats.active}</span>
-                    </button>
-                    <button
-                        type="button"
-                        className={`bookings-tab-btn ${activeTab === 'upcoming' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('upcoming')}
-                    >
-                        <span>Upcoming</span>
-                        <span className="tab-badge">{stats.upcoming}</span>
-                    </button>
-                    <button
-                        type="button"
-                        className={`bookings-tab-btn ${activeTab === 'completed' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('completed')}
-                    >
-                        <span>Completed</span>
-                        <span className="tab-badge">{stats.completed}</span>
-                    </button>
-                    <button
-                        type="button"
-                        className={`bookings-tab-btn ${activeTab === 'cancelled' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('cancelled')}
-                    >
-                        <span>Cancelled</span>
-                        <span className="tab-badge">{stats.cancelled}</span>
-                    </button>
+            {/* Toolbar: Tabs & Search */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 pb-5 border-b border-white/[0.08]">
+                <div className="flex flex-wrap gap-1.5">
+                    {tabs.map(({ key, label, stat }) => (
+                        <button
+                            key={key}
+                            type="button"
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer border-none ${
+                                activeTab === key
+                                    ? 'bg-blue-500 text-white shadow-md shadow-blue-500/25'
+                                    : 'bg-white/[0.04] text-slate-400 hover:bg-white/[0.08] hover:text-slate-200'
+                            }`}
+                            onClick={() => setActiveTab(key)}
+                        >
+                            <span>{label}</span>
+                            <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-md text-xs font-bold ${
+                                activeTab === key
+                                    ? 'bg-white/20 text-white'
+                                    : 'bg-white/[0.06] text-slate-500'
+                            }`}>
+                                {stats[stat]}
+                            </span>
+                        </button>
+                    ))}
                 </div>
 
-                <div className="bookings-search-wrapper">
-                    <span className="bookings-search-icon">
+                <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
                         <Icons.Search />
                     </span>
                     <input
                         type="text"
-                        className="bookings-search-input"
+                        className="w-full md:w-64 pl-9 pr-9 py-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-sm text-slate-200 placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-colors"
                         placeholder="Search by car, city or ID..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -350,7 +332,7 @@ function MyBookings() {
                     {searchQuery && (
                         <button
                             type="button"
-                            className="bookings-search-clear"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 bg-transparent border-none cursor-pointer text-sm"
                             onClick={() => setSearchQuery('')}
                         >
                             ✕
@@ -359,73 +341,78 @@ function MyBookings() {
                 </div>
             </div>
 
-            {/* Loading state */}
+            {/* Content: Loading / Error / Cards / Empty */}
             {isLoading ? (
-                <div className="bookings-loading-state">
-                    <div className="bookings-spinner" />
-                    <p>Loading your reservations...</p>
+                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                    <div className="w-10 h-10 rounded-full border-[3px] border-blue-500/20 border-t-blue-500 animate-spin" />
+                    <p className="text-slate-400 text-sm">Loading your reservations...</p>
                 </div>
             ) : fetchError ? (
-                /* Error state */
-                <div className="bookings-error-box">
-                    <p>{fetchError}</p>
+                <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+                    <p className="text-red-400 text-sm">{fetchError}</p>
                     <button
                         type="button"
-                        className="btn-action-primary"
+                        className="px-5 py-2.5 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors cursor-pointer border-none"
                         onClick={fetchBookings}
                     >
                         Retry
                     </button>
                 </div>
-            ) : filteredBookings.length > 0 ? (
-                /* Bookings cards stack */
-                <div className="bookings-cards-stack">
+            ) : bookings && filteredBookings.length > 0 ? (
+                <div className="flex flex-col gap-5">
                     {filteredBookings.map((item) => {
                         const isExpanded = expandedIds.has(item.id);
+                        const hasDetails = item.details && (
+                            item.details.insurance ||
+                            item.details.deposit ||
+                            item.details.mileage ||
+                            (Array.isArray(item.details.extras) && item.details.extras.length > 0) ||
+                            item.details.support
+                        );
 
                         return (
-                            <div key={item.id} className="booking-item-card">
+                            <div key={item.id} className="bg-[#151e32] border border-white/[0.08] rounded-xl shadow-lg overflow-hidden transition-shadow duration-200 hover:shadow-xl hover:shadow-black/20">
                                 {/* Card header */}
-                                <div className="booking-card-header">
-                                    <div className="booking-ref-box">
-                                        <span className="booking-ref-number">#{item.id}</span>
+                                <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06] bg-white/[0.02]">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-sm font-bold text-white font-mono">#{item.id}</span>
                                         {item.createdAt && (
-                                            <span className="booking-ref-date">
-                                                Booked on {item.createdAt}
-                                            </span>
+                                            <span className="text-xs text-slate-500">Booked on {item.createdAt}</span>
                                         )}
                                     </div>
-                                    <div className={`booking-badge ${item.status}`}>
-                                        <span className="booking-badge-dot" />
-                                        <span>{item.statusLabel}</span>
-                                    </div>
+                                    {item.status && (
+                                        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${getBadgeClasses(item.status)}`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${getDotClasses(item.status)}`} />
+                                            <span>{item.statusLabel || item.status}</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Main card content */}
-                                <div className="booking-card-content">
-                                    {/* Left: Vehicle info */}
-                                    <div className="vehicle-media-box">
-                                        <img
-                                            src={item.image}
-                                            alt={item.carName}
-                                            className="vehicle-thumbnail"
-                                            onError={(e) => {
-                                                e.currentTarget.src =
-                                                    'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=700&q=80';
-                                            }}
-                                        />
-                                        <div className="vehicle-heading">
-                                            <h3>{item.carName}</h3>
-                                            <span className="vehicle-category">
-                                                {item.category}
-                                                {item.plate ? ` • ${item.plate}` : ''}
-                                            </span>
-                                            {item.specs && item.specs.length > 0 && (
-                                                <div className="vehicle-specs-list">
+                                <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] lg:grid-cols-[260px_1fr_200px] gap-5 p-5">
+                                    {/* Vehicle info */}
+                                    <div className="flex items-start gap-4">
+                                        {item.image && (
+                                            <img
+                                                src={item.image}
+                                                alt={item.carName || 'Vehicle'}
+                                                className="w-24 h-16 rounded-lg object-cover border border-white/[0.08] shrink-0"
+                                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                            />
+                                        )}
+                                        <div className="flex flex-col gap-1">
+                                            <h3 className="text-base font-bold text-white leading-tight">{item.carName || 'Vehicle'}</h3>
+                                            {(item.category || item.plate) && (
+                                                <span className="text-xs text-slate-400">
+                                                    {[item.category, item.plate].filter(Boolean).join(' • ')}
+                                                </span>
+                                            )}
+                                            {Array.isArray(item.specs) && item.specs.length > 0 && (
+                                                <div className="flex flex-wrap gap-1.5 mt-1">
                                                     {item.specs.map((spec, idx) => (
                                                         <span
                                                             key={idx}
-                                                            className="vehicle-spec-pill"
+                                                            className="inline-block px-2 py-0.5 rounded-md bg-white/[0.05] text-[0.7rem] text-slate-400 border border-white/[0.06]"
                                                         >
                                                             {spec}
                                                         </span>
@@ -435,92 +422,102 @@ function MyBookings() {
                                         </div>
                                     </div>
 
-                                    {/* Middle: Itinerary */}
-                                    <div className="rental-route-box">
-                                        <div className="rental-route-point">
-                                            <span className="rental-point-label">Pick-up</span>
-                                            <span className="rental-point-date">
-                                                <Icons.Calendar />
-                                                {item.pickupDate}
-                                            </span>
-                                            <span className="rental-point-place">
-                                                <Icons.MapPin />
-                                                {item.pickupLocation}
-                                            </span>
+                                    {/* Itinerary */}
+                                    <div className="flex flex-col gap-3 justify-center">
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className="text-[0.65rem] uppercase tracking-widest text-slate-500 font-semibold">Pick-up</span>
+                                            {item.pickupDate && (
+                                                <span className="flex items-center text-sm text-slate-300">
+                                                    <Icons.Calendar />
+                                                    {item.pickupDate}
+                                                </span>
+                                            )}
+                                            {item.pickupLocation && (
+                                                <span className="flex items-center text-xs text-slate-400">
+                                                    <Icons.MapPin />
+                                                    {item.pickupLocation}
+                                                </span>
+                                            )}
                                         </div>
 
                                         {item.duration && (
-                                            <div className="rental-duration-tag">
+                                            <div className="self-start px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 text-xs font-semibold">
                                                 Rental duration: {item.duration}
                                             </div>
                                         )}
 
-                                        <div className="rental-route-point">
-                                            <span className="rental-point-label">Drop-off</span>
-                                            <span className="rental-point-date">
-                                                <Icons.Calendar />
-                                                {item.returnDate}
-                                            </span>
-                                            <span className="rental-point-place">
-                                                <Icons.MapPin />
-                                                {item.returnLocation}
-                                            </span>
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className="text-[0.65rem] uppercase tracking-widest text-slate-500 font-semibold">Drop-off</span>
+                                            {item.returnDate && (
+                                                <span className="flex items-center text-sm text-slate-300">
+                                                    <Icons.Calendar />
+                                                    {item.returnDate}
+                                                </span>
+                                            )}
+                                            {item.returnLocation && (
+                                                <span className="flex items-center text-xs text-slate-400">
+                                                    <Icons.MapPin />
+                                                    {item.returnLocation}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
 
-                                    {/* Right: Pricing summary */}
-                                    <div className="rental-price-box">
+                                    {/* Pricing */}
+                                    <div className="flex flex-row items-center gap-3 md:col-span-2 lg:col-span-1 lg:flex-col lg:items-end lg:justify-center">
                                         {item.dailyRate && (
-                                            <span className="price-rate-label">
-                                                {item.dailyRate} / day
+                                            <span className="text-xs text-slate-400">{item.dailyRate} / day</span>
+                                        )}
+                                        {item.totalPrice && (
+                                            <div className="text-xl font-extrabold text-white">{item.totalPrice}</div>
+                                        )}
+                                        {item.paymentStatus && (
+                                            <span className={`inline-block px-2.5 py-1 rounded-md text-xs font-semibold ${
+                                                item.status === 'cancelled'
+                                                    ? 'bg-amber-500/10 text-amber-400'
+                                                    : 'bg-emerald-500/10 text-emerald-400'
+                                            }`}>
+                                                {item.paymentStatus}
                                             </span>
                                         )}
-                                        <div className="price-grand-total">{item.totalPrice}</div>
-                                        <span
-                                            className={`price-payment-state ${
-                                                item.status === 'cancelled' ? 'refunded' : ''
-                                            }`}
-                                        >
-                                            {item.paymentStatus}
-                                        </span>
                                     </div>
                                 </div>
 
-                                {/* Footer controls */}
-                                <div className="booking-card-footer">
-                                    <button
-                                        type="button"
-                                        className="btn-details-toggle"
-                                        onClick={() => handleToggleExpand(item.id)}
-                                    >
-                                        <span>
-                                            {isExpanded ? 'Hide details' : 'View details'}
-                                        </span>
-                                        <Icons.Chevron open={isExpanded} />
-                                    </button>
+                                {/* Footer */}
+                                <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-t border-white/[0.06] bg-white/[0.015]">
+                                    {hasDetails ? (
+                                        <button
+                                            type="button"
+                                            className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-blue-400 transition-colors bg-transparent border-none cursor-pointer font-medium"
+                                            onClick={() => handleToggleExpand(item.id)}
+                                        >
+                                            <span>{isExpanded ? 'Hide details' : 'View details'}</span>
+                                            <Icons.Chevron open={isExpanded} />
+                                        </button>
+                                    ) : <div />}
 
-                                    <div className="booking-actions-group">
+                                    <div className="flex items-center gap-2 flex-wrap justify-end">
                                         {item.status === 'active' && (
                                             <>
                                                 <button
                                                     type="button"
-                                                    className="btn-action-secondary"
-                                                    onClick={() =>
-                                                        handleActionClick(
-                                                            `Extension request sent for ${item.id}.`
-                                                        )
-                                                    }
+                                                    className="px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors cursor-pointer border-none disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    disabled={returningId === item.id}
+                                                    onClick={() => handleReturnBooking(item.id)}
+                                                >
+                                                    {returningId === item.id ? 'Returning...' : 'Return vehicle'}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="px-4 py-2 rounded-lg bg-white/[0.06] text-slate-300 text-sm font-semibold hover:bg-white/[0.1] transition-colors cursor-pointer border border-white/[0.08]"
+                                                    onClick={() => handleActionClick(`Extension request sent for #${item.id}.`)}
                                                 >
                                                     Extend rental
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    className="btn-action-primary"
-                                                    onClick={() =>
-                                                        handleActionClick(
-                                                            `Rental pass for ${item.id} generated.`
-                                                        )
-                                                    }
+                                                    className="px-4 py-2 rounded-lg bg-white/[0.06] text-slate-300 text-sm font-semibold hover:bg-white/[0.1] transition-colors cursor-pointer border border-white/[0.08]"
+                                                    onClick={() => handleActionClick(`Rental pass for #${item.id} generated.`)}
                                                 >
                                                     Digital Key Pass
                                                 </button>
@@ -531,35 +528,23 @@ function MyBookings() {
                                             <>
                                                 <button
                                                     type="button"
-                                                    className="btn-action-danger"
+                                                    className="px-4 py-2 rounded-lg bg-red-500/15 text-red-400 text-sm font-semibold hover:bg-red-500/25 transition-colors cursor-pointer border border-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
                                                     disabled={cancellingId === item.id}
-                                                    onClick={() =>
-                                                        handleCancelBooking(item.id)
-                                                    }
+                                                    onClick={() => handleCancelBooking(item.id)}
                                                 >
-                                                    {cancellingId === item.id
-                                                        ? 'Cancelling...'
-                                                        : 'Cancel'}
+                                                    {cancellingId === item.id ? 'Cancelling...' : 'Cancel'}
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    className="btn-action-secondary"
-                                                    onClick={() =>
-                                                        handleActionClick(
-                                                            `Modify window opened for ${item.id}.`
-                                                        )
-                                                    }
+                                                    className="px-4 py-2 rounded-lg bg-white/[0.06] text-slate-300 text-sm font-semibold hover:bg-white/[0.1] transition-colors cursor-pointer border border-white/[0.08]"
+                                                    onClick={() => handleActionClick(`Modify window opened for #${item.id}.`)}
                                                 >
                                                     Modify dates
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    className="btn-action-primary"
-                                                    onClick={() =>
-                                                        handleActionClick(
-                                                            `Voucher PDF for ${item.id} downloaded.`
-                                                        )
-                                                    }
+                                                    className="px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors cursor-pointer border-none"
+                                                    onClick={() => handleActionClick(`Voucher PDF for #${item.id} downloaded.`)}
                                                 >
                                                     Download voucher
                                                 </button>
@@ -570,18 +555,14 @@ function MyBookings() {
                                             <>
                                                 <button
                                                     type="button"
-                                                    className="btn-action-secondary"
-                                                    onClick={() =>
-                                                        handleActionClick(
-                                                            `Invoice for ${item.id} downloaded.`
-                                                        )
-                                                    }
+                                                    className="px-4 py-2 rounded-lg bg-white/[0.06] text-slate-300 text-sm font-semibold hover:bg-white/[0.1] transition-colors cursor-pointer border border-white/[0.08]"
+                                                    onClick={() => handleActionClick(`Invoice for #${item.id} downloaded.`)}
                                                 >
                                                     Invoice (PDF)
                                                 </button>
                                                 <Link
                                                     to="/booking"
-                                                    className="btn-action-primary"
+                                                    className="inline-block px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors no-underline"
                                                 >
                                                     Rent again
                                                 </Link>
@@ -592,18 +573,14 @@ function MyBookings() {
                                             <>
                                                 <button
                                                     type="button"
-                                                    className="btn-action-secondary"
-                                                    onClick={() =>
-                                                        handleActionClick(
-                                                            `Refund receipt for ${item.id} downloaded.`
-                                                        )
-                                                    }
+                                                    className="px-4 py-2 rounded-lg bg-white/[0.06] text-slate-300 text-sm font-semibold hover:bg-white/[0.1] transition-colors cursor-pointer border border-white/[0.08]"
+                                                    onClick={() => handleActionClick(`Refund receipt for #${item.id} downloaded.`)}
                                                 >
                                                     Receipt
                                                 </button>
                                                 <Link
                                                     to="/fleet"
-                                                    className="btn-action-primary"
+                                                    className="inline-block px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition-colors no-underline"
                                                 >
                                                     Browse fleet
                                                 </Link>
@@ -612,49 +589,53 @@ function MyBookings() {
                                     </div>
                                 </div>
 
-                                {/* Expandable details panel */}
-                                {isExpanded && item.details && (
-                                    <div className="booking-expanded-panel">
-                                        <div className="expanded-item">
-                                            <h4>Insurance</h4>
-                                            <p>{item.details.insurance}</p>
-                                            {item.details.deposit && (
-                                                <p className="meta-note">
-                                                    Deposit: <strong>{item.details.deposit}</strong>
-                                                </p>
-                                            )}
-                                        </div>
+                                {/* Expandable details */}
+                                {isExpanded && hasDetails && (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 px-5 py-5 border-t border-white/[0.06] bg-[#0d1526]">
+                                        {(item.details.insurance || item.details.deposit) && (
+                                            <div>
+                                                <h4 className="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2">Insurance</h4>
+                                                {item.details.insurance && <p className="text-sm text-slate-300">{item.details.insurance}</p>}
+                                                {item.details.deposit && (
+                                                    <p className="text-xs text-slate-500 mt-1">
+                                                        Deposit: <strong className="text-slate-400">{item.details.deposit}</strong>
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
 
-                                        <div className="expanded-item">
-                                            <h4>Mileage policy</h4>
-                                            <p>{item.details.mileage}</p>
-                                            <p className="meta-note">Fuel policy: Full-to-Full</p>
-                                        </div>
+                                        {item.details.mileage && (
+                                            <div>
+                                                <h4 className="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2">Mileage policy</h4>
+                                                <p className="text-sm text-slate-300">{item.details.mileage}</p>
+                                            </div>
+                                        )}
 
-                                        {item.details.extras && item.details.extras.length > 0 && (
-                                            <div className="expanded-item">
-                                                <h4>Included options</h4>
-                                                <div className="extras-tags">
+                                        {Array.isArray(item.details.extras) && item.details.extras.length > 0 && (
+                                            <div>
+                                                <h4 className="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2">Included options</h4>
+                                                <div className="flex flex-wrap gap-1.5">
                                                     {item.details.extras.map((extra, idx) => (
-                                                        <span key={idx}>{extra}</span>
+                                                        <span key={idx} className="px-2 py-0.5 rounded-md bg-white/[0.05] text-xs text-slate-400 border border-white/[0.06]">
+                                                            {extra}
+                                                        </span>
                                                     ))}
                                                 </div>
                                             </div>
                                         )}
 
-                                        <div className="expanded-item">
-                                            <h4>Emergency contact</h4>
-                                            <p>{item.details.support}</p>
-                                            <p className="meta-note">
-                                                Questions?{' '}
-                                                <Link
-                                                    to="/contact"
-                                                    style={{ color: '#3b82f6' }}
-                                                >
-                                                    Contact support
-                                                </Link>
-                                            </p>
-                                        </div>
+                                        {item.details.support && (
+                                            <div>
+                                                <h4 className="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2">Emergency contact</h4>
+                                                <p className="text-sm text-slate-300">{item.details.support}</p>
+                                                <p className="text-xs text-slate-500 mt-1">
+                                                    Questions?{' '}
+                                                    <Link to="/contact" className="text-blue-500 hover:text-blue-400 transition-colors">
+                                                        Contact support
+                                                    </Link>
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -662,31 +643,24 @@ function MyBookings() {
                     })}
                 </div>
             ) : (
-                /* Empty state when user has no bookings */
-                <div className="bookings-empty-box">
-                    <div className="empty-icon-circle">
+                /* Empty state */
+                <div className="flex flex-col items-center justify-center py-20 gap-5 text-center">
+                    <div className="flex items-center justify-center w-16 h-16 rounded-full bg-white/[0.04] border border-white/[0.08] text-slate-500">
                         <Icons.Car />
                     </div>
-                    <h3>No bookings yet</h3>
-                    <p>
+                    <h3 className="text-lg font-bold text-white">No bookings yet</h3>
+                    <p className="text-sm text-slate-400 max-w-md">
                         {searchQuery
                             ? `No reservation matches your search "${searchQuery}".`
-                            : "You don't have any bookings yet. Choose a car from our fleet and hit the road!"}
+                            : "You don't have any bookings in our database yet. Choose a car from our fleet and hit the road!"}
                     </p>
-                    <div className="empty-state-actions">
-                        <Link to="/booking" className="btn-book-now">
+                    <div>
+                        <Link
+                            to="/booking"
+                            className="inline-block px-6 py-3 rounded-xl bg-blue-500 text-white text-sm font-bold hover:bg-blue-600 transition-colors no-underline shadow-lg shadow-blue-500/25"
+                        >
                             Book a car now
                         </Link>
-                        {!searchQuery && (
-                            <button
-                                type="button"
-                                className="btn-action-secondary"
-                                onClick={handleSeedSample}
-                                disabled={isSeeding}
-                            >
-                                {isSeeding ? 'Adding samples...' : 'Add sample bookings (Demo)'}
-                            </button>
-                        )}
                     </div>
                 </div>
             )}

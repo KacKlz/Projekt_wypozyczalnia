@@ -7,6 +7,11 @@ const bookingSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    vehicleId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Vehicle",
+        default: null
+    },
     bookingNumber: {
         type: String,
         required: true,
@@ -18,15 +23,15 @@ const bookingSchema = new mongoose.Schema({
     },
     category: {
         type: String,
-        default: "Standard"
+        default: null
     },
     plate: {
         type: String,
-        default: ""
+        default: null
     },
     image: {
         type: String,
-        default: ""
+        default: null
     },
     status: {
         type: String,
@@ -35,64 +40,64 @@ const bookingSchema = new mongoose.Schema({
     },
     statusLabel: {
         type: String,
-        default: "Confirmed"
+        default: null
     },
     pickupDate: {
         type: String,
-        required: true
+        default: null
     },
     pickupLocation: {
         type: String,
-        required: true
+        default: null
     },
     returnDate: {
         type: String,
-        required: true
+        default: null
     },
     returnLocation: {
         type: String,
-        required: true
+        default: null
     },
     duration: {
         type: String,
-        default: ""
+        default: null
     },
     dailyRate: {
         type: String,
-        default: ""
+        default: null
     },
     totalPrice: {
         type: String,
-        default: ""
+        default: null
     },
     paymentStatus: {
         type: String,
-        default: "Paid Online"
+        default: null
     },
     specs: {
         type: [String],
-        default: []
+        default: null
     },
     details: {
         insurance: {
             type: String,
-            default: "Full Comprehensive Cover (0 PLN Deductible)"
+            default: null
         },
         deposit: {
             type: String,
-            default: "1 500 PLN (Pre-authorized on card)"
+            default: null
         },
         mileage: {
             type: String,
-            default: "Unlimited kilometers"
+            default: null
         },
         extras: {
             type: [String],
-            default: []
+            default: null
         },
         support: {
             type: String,
-            default: "+48 22 100 20 30"
+            default: null
         }
     },
     createdAt: {
