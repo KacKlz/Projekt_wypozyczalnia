@@ -104,8 +104,4 @@
     .nav-link.active::after {
         bottom: -4px;
     }
-
-    .header-actions {
-        gap: 1.25rem;
-    }
 }
