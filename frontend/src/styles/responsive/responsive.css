@@ -62,8 +62,7 @@
 
 @media (min-width: 1024px) {
     .header-bar {
-        /* On wide screens keep header content aligned with page content */
-        padding: 0.85rem max(2.5rem, calc((100% - var(--content-width)) / 2 + 2.5rem));
+        padding: 0.85rem 2.5rem;
         gap: 0;
     }
 
