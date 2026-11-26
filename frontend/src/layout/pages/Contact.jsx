@@ -299,10 +299,10 @@ function Contact() {
                                         E-mail
                                     </span>
                                     <a
-                                        href="mailto:kontakt@cars-rent.pl"
+                                        href="mailto:testwypozyczalnia@gmail.com"
                                         className="text-base sm:text-lg font-bold text-white break-words transition-colors hover:text-blue-400"
                                     >
-                                        kontakt@cars-rent.pl
+                                        testwypozyczalnia@gmail.com
                                     </a>
                                     <span className="text-xs sm:text-sm text-slate-400 !mt-1">
                                         Odpowiadamy w ciągu 24h
