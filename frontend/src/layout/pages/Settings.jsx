@@ -79,9 +79,12 @@ function Settings({ user, setUser }) {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [passwordErrors, setPasswordErrors] = useState({});
+    const [isSavingPassword, setIsSavingPassword] = useState(false);
+    const [passwordFeedback, setPasswordFeedback] = useState(null);
 
-    function handlePasswordSubmit(event) {
+    async function handlePasswordSubmit(event) {
         event.preventDefault();
+        setPasswordFeedback(null);
 
         // Current password is only checked for presence here,
         // the backend verifies it against the stored hash
@@ -98,14 +101,36 @@ function Settings({ user, setUser }) {
             return;
         }
 
-        // TODO: send to backend (PATCH /api/users/me/password)
-        // Never log passwords
-        console.log('Password form submitted');
+        setIsSavingPassword(true);
 
-        // Passwords should not stay in the form after submitting
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
+        try {
+            const res = await fetch('/api/users/me/password', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword, newPassword }),
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                // The backend says which field the error belongs to (e.g. "currentPassword")
+                if (data.field) {
+                    setPasswordErrors({ [data.field]: data.message });
+                } else {
+                    setPasswordFeedback({ type: 'error', text: data.message });
+                }
+                return;
+            }
+
+            // Passwords should not stay in the form after a successful change
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+            setPasswordFeedback({ type: 'success', text: 'Password updated.' });
+        } catch {
+            setPasswordFeedback({ type: 'error', text: 'Could not connect to the server.' });
+        } finally {
+            setIsSavingPassword(false);
+        }
     }
 
     // DELETE ACCOUNT
@@ -294,12 +319,21 @@ function Settings({ user, setUser }) {
                                 />
                             </div>
 
-                            <div className="mt-6 flex justify-end">
+                            <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
+                                {passwordFeedback && (
+                                    <p
+                                        role="status"
+                                        className={`text-sm ${passwordFeedback.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}
+                                    >
+                                        {passwordFeedback.text}
+                                    </p>
+                                )}
                                 <button
                                     type="submit"
-                                    className="w-full rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-600 md:w-auto"
+                                    disabled={isSavingPassword}
+                                    className="w-full rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60 md:w-auto"
                                 >
-                                    Update password
+                                    {isSavingPassword ? 'Updating…' : 'Update password'}
                                 </button>
                             </div>
                         </form>

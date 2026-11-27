@@ -65,11 +65,11 @@ router.patch("/me/password", authMiddleware, passwordChangeLimiter, async (req, 
     const passwordError = validatePassword(newPassword);
 
     if (passwordError) {
-        return res.status(400).json({ message: passwordError });
+        return res.status(400).json({ message: passwordError, field: "newPassword" });
     }
 
     if (newPassword === currentPassword) {
-        return res.status(400).json({ message: "New password must be different from the current one." });
+        return res.status(400).json({ message: "New password must be different from the current one.", field: "newPassword" });
     }
 
     try {
@@ -83,8 +83,9 @@ router.patch("/me/password", authMiddleware, passwordChangeLimiter, async (req, 
         const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.hasloHash);
 
         // 400, not 401: the user is logged in, only the entered password is wrong
+        // "field" tells the frontend which input the error belongs to
         if (!isCurrentPasswordValid) {
-            return res.status(400).json({ message: "Current password is incorrect." });
+            return res.status(400).json({ message: "Current password is incorrect.", field: "currentPassword" });
         }
 
         // 12 salt rounds, same as registration
