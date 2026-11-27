@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/User");
+const { EMAIL_REGEX, validatePassword } = require("../utils/validation");
 
 const router = express.Router();
 
@@ -26,20 +27,17 @@ router.post("/register", async (req, res) => {
 
         const normalizedEmail = email.trim().toLowerCase();
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-        if (!emailRegex.test(normalizedEmail)) {
+        if (!EMAIL_REGEX.test(normalizedEmail)) {
             return res.status(400).json({
                 message: "Nieprawidlowy adres email"
             });
         }
 
-        const hasUppercase = /[A-Z]/.test(password);
-        const hasSpecialCharacter = /[^A-Za-z0-9]/.test(password);
+        const passwordError = validatePassword(password);
 
-        if (!hasUppercase || !hasSpecialCharacter) {
+        if (passwordError) {
             return res.status(400).json({
-                message: "Haslo musi zawierac wielka litere i znak specjalny"
+                message: passwordError
             });
         }
 
