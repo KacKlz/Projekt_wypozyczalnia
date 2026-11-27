@@ -1,11 +1,18 @@
 import { Sun, User, Lock, TriangleAlert } from 'lucide-react';
+import { useState } from 'react';
 
 function Settings({ user }) {
     const userName = user?.imie || 'User';
     const userInitial = userName.charAt(0).toUpperCase();
-
     const navLinkClass =
         'flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-[#151e32] px-4 py-2 text-sm font-medium text-slate-300 hover:border-white/20 hover:text-white lg:rounded-xl';
+    const [name, setName] = useState(user?.imie || '');
+    const [email, setEmail] = useState(user?.email || '');
+
+    function handleAccountSubmit(event) {
+        event.preventDefault();
+        console.log('Account data:', { name, email });
+    }
 
     return (
         <main className="mx-auto w-full max-w-(--content-width) px-4 py-8 md:px-10 md:py-12">
@@ -67,42 +74,56 @@ function Settings({ user }) {
                     </section>
 
                     {/* Account */}
+                    {/* Account */}
                     <section id="account" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
                         <div className="flex items-center gap-4">
-                            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-purple-500/15">
-                                <User className="size-5 text-purple-400" aria-hidden="true" />
-                            </span>
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-purple-500/15">
+            <User className="size-5 text-purple-400" aria-hidden="true" />
+        </span>
                             <div>
                                 <h2 className="text-lg font-semibold text-white md:text-xl">Account</h2>
                                 <p className="text-sm text-slate-400">Your name and email are used for bookings and confirmations.</p>
                             </div>
                         </div>
 
-                        <div className="mt-6 grid gap-4 md:grid-cols-2">
-                            <div>
-                                <label htmlFor="account-name" className="mb-1.5 block text-sm font-medium text-slate-300">
-                                    First name
-                                </label>
-                                <input
-                                    id="account-name"
-                                    type="text"
-                                    defaultValue={user?.imie}
-                                    className="w-full rounded-lg border border-white/10 bg-[#0f1729] px-4 py-2.5 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
-                                />
+                        <form onSubmit={handleAccountSubmit} className="mt-6">
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label htmlFor="account-name" className="mb-1.5 block text-sm font-medium text-slate-300">
+                                        First name
+                                    </label>
+                                    <input
+                                        id="account-name"
+                                        type="text"
+                                        value={name}
+                                        onChange={(event) => setName(event.target.value)}
+                                        className="w-full rounded-lg border border-white/10 bg-[#0f1729] px-4 py-2.5 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="account-email" className="mb-1.5 block text-sm font-medium text-slate-300">
+                                        Email
+                                    </label>
+                                    <input
+                                        id="account-email"
+                                        type="email"
+                                        value={email}
+                                        onChange={(event) => setEmail(event.target.value)}
+                                        className="w-full rounded-lg border border-white/10 bg-[#0f1729] px-4 py-2.5 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+                                    />
+                                </div>
                             </div>
 
-                            <div>
-                                <label htmlFor="account-email" className="mb-1.5 block text-sm font-medium text-slate-300">
-                                    Email
-                                </label>
-                                <input
-                                    id="account-email"
-                                    type="email"
-                                    defaultValue={user?.email}
-                                    className="w-full rounded-lg border border-white/10 bg-[#0f1729] px-4 py-2.5 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
-                                />
+                            <div className="mt-6 flex justify-end">
+                                <button
+                                    type="submit"
+                                    className="w-full rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-600 md:w-auto"
+                                >
+                                    Save changes
+                                </button>
                             </div>
-                        </div>
+                        </form>
                     </section>
 
                     {/* Change password */}
