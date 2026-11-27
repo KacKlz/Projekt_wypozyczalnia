@@ -1,28 +1,28 @@
 const express = require("express");
+const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const authMiddleware = require("../middleware/auth");
-const { EMAIL_REGEX } = require("../utils/validation");
+const { EMAIL_REGEX, validatePassword } = require("../utils/validation");
 
 const router = express.Router();
 
-// PATCH /api/users/me - Update the logged-in user's name and email
-router.patch("/me", authMiddleware, async (req, res) => {
-    // Express 5: req.body is undefined when no JSON was sent
-    const { imie, email } = req.body ?? {};
+// PATCH /api/users/me/password - Change the logged-in user's password
+router.patch("/me/password", authMiddleware, async (req, res) => {
+    const { currentPassword, newPassword } = req.body ?? {};
 
-    if (typeof imie !== "string" || typeof email !== "string") {
+    if (typeof currentPassword !== "string" || typeof newPassword !== "string") {
         return res.status(400).json({ message: "Invalid data." });
     }
 
-    const trimmedName = imie.trim();
-    const normalizedEmail = email.trim().toLowerCase();
+    // Same rules as registration (utils/validation.js)
+    const passwordError = validatePassword(newPassword);
 
-    if (trimmedName.length < 2) {
-        return res.status(400).json({ message: "First name must be at least 2 characters." });
+    if (passwordError) {
+        return res.status(400).json({ message: passwordError });
     }
 
-    if (!EMAIL_REGEX.test(normalizedEmail)) {
-        return res.status(400).json({ message: "Invalid email address." });
+    if (newPassword === currentPassword) {
+        return res.status(400).json({ message: "New password must be different from the current one." });
     }
 
     try {
@@ -32,20 +32,21 @@ router.patch("/me", authMiddleware, async (req, res) => {
             return res.status(404).json({ message: "User not found." });
         }
 
-        // Only these two fields can be changed here (never role or hasloHash)
-        user.imie = trimmedName;
-        user.email = normalizedEmail;
-        await user.save();
+        // The only place where the current password can be verified: against the stored hash
+        const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.hasloHash);
 
-        // Same shape as GET /api/auth/me, so the frontend can update its state directly
-        return res.json({ email: user.email, imie: user.imie, role: user.role });
-    } catch (error) {
-        // 11000 = duplicate key: the email is already used by another account
-        if (error.code === 11000) {
-            return res.status(409).json({ message: "This email is already in use." });
+        // 400, not 401: the user is logged in, only the entered password is wrong
+        if (!isCurrentPasswordValid) {
+            return res.status(400).json({ message: "Current password is incorrect." });
         }
 
-        console.error("PATCH /api/users/me error:", error);
+        // 12 salt rounds, same as registration
+        user.hasloHash = await bcrypt.hash(newPassword, 12);
+        await user.save();
+
+        return res.json({ message: "Password updated." });
+    } catch (error) {
+        console.error("PATCH /api/users/me/password error:", error);
         return res.status(500).json({ message: "Server error." });
     }
 });
