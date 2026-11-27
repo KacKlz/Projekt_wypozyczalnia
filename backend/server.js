@@ -9,7 +9,7 @@ const bookingRoutes = require("./routes/bookings");
 const cors = require("cors");
 const contactRoutes = require("./routes/contactRoutes");
 const adminCarsRoutes = require("./routes/adminCars");
-
+const usersRoutes = require("./routes/users");
 
 const PORT = process.env.PORT || 3001;
 
@@ -35,6 +35,7 @@ app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/admin/cars", adminCarsRoutes);
+app.use("/api/users", usersRoutes);
 
 if (!process.env.MONGO_URI) {
     console.error("Blad: brak MONGO_URI w pliku .env");
