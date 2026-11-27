@@ -1,4 +1,4 @@
-import '../../styles/pages/Page.css';
+import { Sun } from 'lucide-react';
 
 function Settings({ user }) {
     const userName = user?.imie || 'User';
@@ -11,6 +11,7 @@ function Settings({ user }) {
                 Manage your appearance, account details and password.
             </p>
 
+            {/* Profile card */}
             <section className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-[#151e32]">
                 <div className="h-24 bg-[#1d3a6e]"></div>
                 <div className="-mt-11 flex flex-wrap items-end gap-4 px-5 pb-6 md:gap-6 md:px-8">
@@ -24,22 +25,34 @@ function Settings({ user }) {
                 </div>
             </section>
 
-            <div className="mt-8 flex flex-col gap-4 md:gap-6">
+            {/* Settings sections */}
+            <div className="mt-6 flex flex-col gap-4 md:gap-6">
+                {/* Appearance */}
                 <section className="rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
-                    <h2 className="mb-1 text-lg font-semibold text-white md:text-xl">Appearance</h2>
-                    <p className="text-sm text-slate-400">Choose how Cars-rent.pl looks.</p>
+                    <div className="flex items-center gap-4">
+                        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/15">
+                            <Sun className="size-5 text-blue-400" aria-hidden="true" />
+                        </span>
+                        <div>
+                            <h2 className="text-lg font-semibold text-white md:text-xl">Appearance</h2>
+                            <p className="text-sm text-slate-400">Choose how Cars-rent.pl looks.</p>
+                        </div>
+                    </div>
                 </section>
 
+                {/* Account */}
                 <section className="rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
                     <h2 className="mb-1 text-lg font-semibold text-white md:text-xl">Account</h2>
                     <p className="text-sm text-slate-400">Your name and email are used for bookings and confirmations.</p>
                 </section>
 
+                {/* Change password */}
                 <section className="rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
                     <h2 className="mb-1 text-lg font-semibold text-white md:text-xl">Change password</h2>
                     <p className="text-sm text-slate-400">Use at least 8 characters, including a number.</p>
                 </section>
 
+                {/* Delete account */}
                 <section className="rounded-xl border border-red-500/40 bg-red-500/5 p-5 md:p-8">
                     <h2 className="mb-1 text-lg font-semibold text-red-300 md:text-xl">Delete account</h2>
                     <p className="text-sm text-slate-400">Permanently removes your account and booking history.</p>
