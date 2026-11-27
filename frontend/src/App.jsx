@@ -10,6 +10,7 @@ import About from './layout/pages/About';
 import Contact from './layout/pages/Contact';
 import MyBookings from './layout/pages/MyBookings';
 import AdminPanel from './layout/admin/AdminPanel';
+import Settings from './layout/pages/Settings';
 
 function App() {
     const navigate = useNavigate();
@@ -114,6 +115,18 @@ function App() {
                     element={
                         user ? (
                             <MyBookings />
+                        ) : (
+                            <Navigate to="/login" replace />
+                        )
+                    }
+                />
+
+                {/* Settings */}
+                <Route
+                    path="/settings"
+                    element={
+                        user ? (
+                            <Settings />
                         ) : (
                             <Navigate to="/login" replace />
                         )

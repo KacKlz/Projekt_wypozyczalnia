@@ -70,6 +70,14 @@ function UserMenu({ user, onLogout }) {
                     >
                         My bookings
                     </Link>
+                    <Link
+                        to="/settings"
+                        className="user-menu-item"
+                        role="menuitem"
+                        onClick={() => setIsMenuOpen(false)}
+                    >
+                        Settings
+                    </Link>
                     <button
                         type="button"
                         className="user-menu-item user-menu-logout"
