@@ -3,7 +3,7 @@ import { Sun, Moon, Monitor, User, Lock, TriangleAlert } from 'lucide-react';
 import { validateEmail, validateName, validatePassword, validatePasswordMatch } from '../../validation';
 import SettingsCard from '../settings/SettingsCard';
 
-
+// Static list, defined outside the component so it is not recreated on every render
 const themeOptions = [
     { value: 'light', label: 'Light', icon: Sun },
     { value: 'dark', label: 'Dark', icon: Moon },
@@ -13,18 +13,23 @@ const themeOptions = [
 function Settings({ user }) {
     const userName = user?.imie || 'User';
     const userInitial = userName.charAt(0).toUpperCase();
+
     const navLinkClass =
         'flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-[#151e32] px-4 py-2 text-sm font-medium text-slate-300 hover:border-white/20 hover:text-white lg:rounded-xl';
+
+    // Shared input styles without border color (border color depends on validation state)
     const inputClass =
         'w-full rounded-lg border bg-[#0f1729] px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none';
 
     // APPEARANCE
+    // UI only for now, applying the theme will be handled in feature/theme
     const [theme, setTheme] = useState('dark');
 
     // ACCOUNT
     const [name, setName] = useState(user?.imie || '');
     const [email, setEmail] = useState(user?.email || '');
     const [accountErrors, setAccountErrors] = useState({});
+
     function handleAccountSubmit(event) {
         event.preventDefault();
 
@@ -38,6 +43,7 @@ function Settings({ user }) {
             return;
         }
 
+        // TODO: send to backend (PATCH /api/users/me)
         console.log('Account data:', { name, email });
     }
 
@@ -50,6 +56,8 @@ function Settings({ user }) {
     function handlePasswordSubmit(event) {
         event.preventDefault();
 
+        // Current password is only checked for presence here,
+        // the backend verifies it against the stored hash
         const errors = {
             currentPassword: currentPassword ? null : 'Current password is required.',
             newPassword:
@@ -63,17 +71,22 @@ function Settings({ user }) {
             return;
         }
 
+        // TODO: send to backend (PATCH /api/users/me/password)
+        // Never log passwords
         console.log('Password form submitted');
 
+        // Passwords should not stay in the form after submitting
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
     }
 
     // DELETE ACCOUNT
+    // Two-step confirmation to prevent deleting the account by accident
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
     function handleDeleteAccount() {
+        // TODO: send to backend (DELETE /api/users/me), then log out
         console.log('Delete account confirmed');
         setIsDeleteConfirmOpen(false);
     }
@@ -88,6 +101,7 @@ function Settings({ user }) {
             {/* Profile card */}
             <section className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-[#151e32]">
                 <div className="h-24 bg-[#1d3a6e]"></div>
+                {/* Negative margin pulls the avatar up so it overlaps the banner */}
                 <div className="-mt-11 flex flex-wrap items-end gap-4 px-5 pb-6 md:gap-6 md:px-8">
                     <div className="flex size-26 items-center justify-center rounded-full border-4 border-[#151e32] bg-blue-500 text-4xl font-bold text-white">
                         {userInitial}
@@ -99,10 +113,10 @@ function Settings({ user }) {
                 </div>
             </section>
 
-            {/* Settings layout: sidebar + sections */}
+            {/* Settings layout: tabs on mobile, sidebar + sections on desktop (lg) */}
             <div className="mt-6 lg:grid lg:grid-cols-[240px_1fr] lg:items-start lg:gap-8">
 
-                {/* Section navigation */}
+                {/* Section navigation: horizontal scroll on mobile, sticky sidebar on desktop */}
                 <nav aria-label="Settings sections" className="flex gap-2 overflow-x-auto pb-1 lg:sticky lg:top-28 lg:flex-col lg:overflow-visible lg:pb-0">
                     <a href="#appearance" className={navLinkClass}>
                         <Sun className="size-4" aria-hidden="true" />
@@ -132,10 +146,12 @@ function Settings({ user }) {
                         title="Appearance"
                         description="Choose how Cars-rent.pl looks."
                     >
+                        {/* Radio inputs are visually hidden (sr-only), the label is styled with has-checked */}
                         <fieldset className="mt-6">
                             <legend className="sr-only">Theme</legend>
                             <div className="grid grid-cols-3 gap-3 md:max-w-lg">
                                 {themeOptions.map((option) => {
+                                    // Component names must start with an uppercase letter
                                     const Icon = option.icon;
 
                                     return (
@@ -162,17 +178,14 @@ function Settings({ user }) {
                     </SettingsCard>
 
                     {/* Account */}
-                    <section id="account" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
-                        <div className="flex items-center gap-4">
-                            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-purple-500/15">
-                                <User className="size-5 text-purple-400" aria-hidden="true" />
-                            </span>
-                            <div>
-                                <h2 className="text-lg font-semibold text-white md:text-xl">Account</h2>
-                                <p className="text-sm text-slate-400">Your name and email are used for bookings and confirmations.</p>
-                            </div>
-                        </div>
-
+                    <SettingsCard
+                        id="account"
+                        icon={User}
+                        color="purple"
+                        title="Account"
+                        description="Your name and email are used for bookings and confirmations."
+                    >
+                        {/* noValidate: use our own error messages instead of the browser's popups */}
                         <form onSubmit={handleAccountSubmit} noValidate className="mt-6">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div>
@@ -225,26 +238,23 @@ function Settings({ user }) {
                                 </button>
                             </div>
                         </form>
-                    </section>
+                    </SettingsCard>
 
                     {/* Change password */}
-                    <section id="password" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
-                        <div className="flex items-center gap-4">
-                            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15">
-                                <Lock className="size-5 text-emerald-400" aria-hidden="true" />
-                            </span>
-                            <div>
-                                <h2 className="text-lg font-semibold text-white md:text-xl">Change password</h2>
-                                <p className="text-sm text-slate-400">At least 8 characters, one uppercase letter and one special character.</p>
-                            </div>
-                        </div>
-
+                    <SettingsCard
+                        id="password"
+                        icon={Lock}
+                        color="emerald"
+                        title="Change password"
+                        description="At least 8 characters, one uppercase letter and one special character."
+                    >
                         <form onSubmit={handlePasswordSubmit} noValidate className="mt-6">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="md:col-span-2">
                                     <label htmlFor="current-password" className="mb-1.5 block text-sm font-medium text-slate-300">
                                         Current password
                                     </label>
+                                    {/* autoComplete helps password managers fill in or generate passwords */}
                                     <input
                                         id="current-password"
                                         type="password"
@@ -314,26 +324,24 @@ function Settings({ user }) {
                                 </button>
                             </div>
                         </form>
-                    </section>
+                    </SettingsCard>
 
                     {/* Delete account */}
-                    <section id="delete-account" className="scroll-mt-24 rounded-xl border border-red-500/40 bg-red-500/5 p-5 md:p-8">
-                        <div className="flex items-center gap-4">
-                            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-red-500/15">
-                                <TriangleAlert className="size-5 text-red-400" aria-hidden="true" />
-                            </span>
-                            <div>
-                                <h2 className="text-lg font-semibold text-red-300 md:text-xl">Delete account</h2>
-                                <p className="text-sm text-slate-400">Permanently removes your account and booking history.</p>
-                            </div>
-                        </div>
-
+                    <SettingsCard
+                        id="delete-account"
+                        icon={TriangleAlert}
+                        color="red"
+                        title="Delete account"
+                        description="Permanently removes your account and booking history."
+                        danger
+                    >
                         <div className="mt-6">
                             {isDeleteConfirmOpen ? (
                                 <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-4">
                                     <p className="text-sm text-red-200">
                                         Are you sure? This action cannot be undone.
                                     </p>
+                                    {/* flex-col-reverse: destructive button on top on mobile, on the right on desktop */}
                                     <div className="mt-4 flex flex-col-reverse gap-3 md:flex-row md:justify-end">
                                         <button
                                             type="button"
@@ -363,7 +371,7 @@ function Settings({ user }) {
                                 </div>
                             )}
                         </div>
-                    </section>
+                    </SettingsCard>
                 </div>
             </div>
         </main>

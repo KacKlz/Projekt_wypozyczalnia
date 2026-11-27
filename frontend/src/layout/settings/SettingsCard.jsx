@@ -1,3 +1,5 @@
+// Full class names are required: Tailwind only generates classes it can find
+// in the source, so dynamic names like `bg-${color}-500/15` would not work
 const colorClasses = {
     blue: { badge: 'bg-blue-500/15', icon: 'text-blue-400' },
     purple: { badge: 'bg-purple-500/15', icon: 'text-purple-400' },
@@ -5,10 +7,12 @@ const colorClasses = {
     red: { badge: 'bg-red-500/15', icon: 'text-red-400' },
 };
 
+// Shared layout for settings sections: icon badge, title, description and content
 function SettingsCard({ id, icon: Icon, color = 'blue', title, description, danger = false, children }) {
     const colors = colorClasses[color];
 
     return (
+        // scroll-mt-24 keeps the title visible below the sticky header when jumping to #id
         <section
             id={id}
             className={`scroll-mt-24 rounded-xl border p-5 md:p-8 ${danger ? 'border-red-500/40 bg-red-500/5' : 'border-white/10 bg-[#151e32]'}`}
