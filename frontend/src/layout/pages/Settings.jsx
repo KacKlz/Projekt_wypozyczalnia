@@ -312,7 +312,10 @@ function Settings({ user, setUser }) {
                             <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
                                 {/* Always in the DOM, so screen readers announce text changes */}
                                 <p className="sr-only" role="status">
-                                    {accountFeedback?.text}
+                                    {accountFeedback?.type === 'success' ? accountFeedback.text : ''}
+                                </p>
+                                <p className="sr-only" role="alert">
+                                    {accountFeedback?.type === 'error' ? accountFeedback.text : ''}
                                 </p>
                                 {accountFeedback && (
                                     <p
@@ -377,7 +380,10 @@ function Settings({ user, setUser }) {
                             <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
                                 {/* Always in the DOM, so screen readers announce text changes */}
                                 <p className="sr-only" role="status">
-                                    {passwordFeedback?.text}
+                                    {passwordFeedback?.type === 'success' ? passwordFeedback.text : ''}
+                                </p>
+                                <p className="sr-only" role="alert">
+                                    {passwordFeedback?.type === 'error' ? passwordFeedback.text : ''}
                                 </p>
                                 {passwordFeedback && (
                                     <p
