@@ -21,11 +21,11 @@ router.patch("/me", authMiddleware, async (req, res) => {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (trimmedName.length < 2) {
-        return res.status(400).json({ message: "First name must be at least 2 characters." });
+        return res.status(400).json({ message: "First name must be at least 2 characters.", field: "imie" });
     }
 
     if (!EMAIL_REGEX.test(normalizedEmail)) {
-        return res.status(400).json({ message: "Invalid email address." });
+        return res.status(400).json({ message: "Invalid email address.", field: "email" });
     }
 
     try {
@@ -45,7 +45,7 @@ router.patch("/me", authMiddleware, async (req, res) => {
     } catch (error) {
         // 11000 = duplicate key: the email is already used by another account
         if (error.code === 11000) {
-            return res.status(409).json({ message: "This email is already in use." });
+            return res.status(409).json({ message: "This email is already in use.", field: "email" });
         }
 
         console.error("PATCH /api/users/me error:", error);
@@ -131,9 +131,10 @@ router.delete("/me", authMiddleware, async (req, res) => {
             });
         }
 
-        // MongoDB has no cascade delete, so remove the booking history explicitly
-        await Booking.deleteMany({ userId: user._id });
+        // Delete the account first: if this fails, the booking history stays intact.
+        // Orphaned bookings are a smaller problem than an existing account without history.
         await User.deleteOne({ _id: user._id });
+        await Booking.deleteMany({ userId: user._id });
 
         // Same options as POST /api/auth/logout, otherwise the cookie is not removed
         res.clearCookie("token", {
