@@ -126,7 +126,7 @@ function App() {
                     path="/settings"
                     element={
                         user ? (
-                            <Settings user={user} />
+                            <Settings user={user} setUser={setUser} />
                         ) : (
                             <Navigate to="/login" replace />
                         )

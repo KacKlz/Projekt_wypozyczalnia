@@ -11,7 +11,7 @@ const themeOptions = [
     { value: 'system', label: 'System', icon: Monitor },
 ];
 
-function Settings({ user }) {
+function Settings({ user, setUser }) {
     const userName = user?.imie || 'User';
     const userInitial = userName.charAt(0).toUpperCase();
 
@@ -26,9 +26,13 @@ function Settings({ user }) {
     const [name, setName] = useState(user?.imie || '');
     const [email, setEmail] = useState(user?.email || '');
     const [accountErrors, setAccountErrors] = useState({});
+    const [isSavingAccount, setIsSavingAccount] = useState(false);
+    // { type: 'success' | 'error', text: string } or null
+    const [accountFeedback, setAccountFeedback] = useState(null);
 
-    function handleAccountSubmit(event) {
+    async function handleAccountSubmit(event) {
         event.preventDefault();
+        setAccountFeedback(null);
 
         const errors = {
             name: validateName(name),
@@ -40,8 +44,34 @@ function Settings({ user }) {
             return;
         }
 
-        // TODO: send to backend (PATCH /api/users/me)
-        console.log('Account data:', { name, email });
+        setIsSavingAccount(true);
+
+        try {
+            const res = await fetch('/api/users/me', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imie: name, email }),
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                // 409 = email taken: show it under the email field
+                if (res.status === 409) {
+                    setAccountErrors({ email: data.message });
+                } else {
+                    setAccountFeedback({ type: 'error', text: data.message });
+                }
+                return;
+            }
+
+            // Updates the header avatar and the profile card
+            setUser(data);
+            setAccountFeedback({ type: 'success', text: 'Changes saved.' });
+        } catch {
+            setAccountFeedback({ type: 'error', text: 'Could not connect to the server.' });
+        } finally {
+            setIsSavingAccount(false);
+        }
     }
 
     // PASSWORD
@@ -203,12 +233,21 @@ function Settings({ user }) {
                                 />
                             </div>
 
-                            <div className="mt-6 flex justify-end">
+                            <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
+                                {accountFeedback && (
+                                    <p
+                                        role="status"
+                                        className={`text-sm ${accountFeedback.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}
+                                    >
+                                        {accountFeedback.text}
+                                    </p>
+                                )}
                                 <button
                                     type="submit"
-                                    className="w-full rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-600 md:w-auto"
+                                    disabled={isSavingAccount}
+                                    className="w-full rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60 md:w-auto"
                                 >
-                                    Save changes
+                                    {isSavingAccount ? 'Saving…' : 'Save changes'}
                                 </button>
                             </div>
                         </form>
