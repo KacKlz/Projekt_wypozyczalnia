@@ -5,7 +5,7 @@ function Settings({ user }) {
     const userInitial = userName.charAt(0).toUpperCase();
 
     const navLinkClass =
-        'flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-[#151e32] px-4 py-2 text-sm font-medium text-slate-300 hover:border-white/20 hover:text-white';
+        'flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-[#151e32] px-4 py-2 text-sm font-medium text-slate-300 hover:border-white/20 hover:text-white lg:rounded-xl';
 
     return (
         <main className="mx-auto w-full max-w-(--content-width) px-4 py-8 md:px-10 md:py-12">
@@ -28,79 +28,83 @@ function Settings({ user }) {
                 </div>
             </section>
 
-            {/* Section navigation */}
-            <nav aria-label="Settings sections" className="mt-6 flex gap-2 overflow-x-auto pb-1">
-                <a href="#appearance" className={navLinkClass}>
-                    <Sun className="size-4" aria-hidden="true" />
-                    Appearance
-                </a>
-                <a href="#account" className={navLinkClass}>
-                    <User className="size-4" aria-hidden="true" />
-                    Account
-                </a>
-                <a href="#password" className={navLinkClass}>
-                    <Lock className="size-4" aria-hidden="true" />
-                    Password
-                </a>
-                <a href="#delete-account" className={navLinkClass}>
-                    <TriangleAlert className="size-4" aria-hidden="true" />
-                    Delete
-                </a>
-            </nav>
+            {/* Settings layout: sidebar + sections */}
+            <div className="mt-6 lg:grid lg:grid-cols-[240px_1fr] lg:items-start lg:gap-8">
 
-            {/* Settings sections */}
-            <div className="mt-6 flex flex-col gap-4 md:gap-6">
-                {/* Appearance */}
-                <section id="appearance" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
-                    <div className="flex items-center gap-4">
-                        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/15">
-                            <Sun className="size-5 text-blue-400" aria-hidden="true" />
-                        </span>
-                        <div>
-                            <h2 className="text-lg font-semibold text-white md:text-xl">Appearance</h2>
-                            <p className="text-sm text-slate-400">Choose how Cars-rent.pl looks.</p>
-                        </div>
-                    </div>
-                </section>
+                {/* Section navigation */}
+                <nav aria-label="Settings sections" className="flex gap-2 overflow-x-auto pb-1 lg:sticky lg:top-28 lg:flex-col lg:overflow-visible lg:pb-0">
+                    <a href="#appearance" className={navLinkClass}>
+                        <Sun className="size-4" aria-hidden="true" />
+                        Appearance
+                    </a>
+                    <a href="#account" className={navLinkClass}>
+                        <User className="size-4" aria-hidden="true" />
+                        Account
+                    </a>
+                    <a href="#password" className={navLinkClass}>
+                        <Lock className="size-4" aria-hidden="true" />
+                        Password
+                    </a>
+                    <a href="#delete-account" className={navLinkClass}>
+                        <TriangleAlert className="size-4" aria-hidden="true" />
+                        Delete
+                    </a>
+                </nav>
 
-                {/* Account */}
-                <section id="account" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
-                    <div className="flex items-center gap-4">
-                        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-purple-500/15">
-                            <User className="size-5 text-purple-400" aria-hidden="true" />
-                        </span>
-                        <div>
-                            <h2 className="text-lg font-semibold text-white md:text-xl">Account</h2>
-                            <p className="text-sm text-slate-400">Your name and email are used for bookings and confirmations.</p>
+                {/* Settings sections */}
+                <div className="mt-6 flex flex-col gap-4 md:gap-6">
+                    {/* Appearance */}
+                    <section id="appearance" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
+                        <div className="flex items-center gap-4">
+                            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/15">
+                                <Sun className="size-5 text-blue-400" aria-hidden="true" />
+                            </span>
+                            <div>
+                                <h2 className="text-lg font-semibold text-white md:text-xl">Appearance</h2>
+                                <p className="text-sm text-slate-400">Choose how Cars-rent.pl looks.</p>
+                            </div>
                         </div>
-                    </div>
-                </section>
+                    </section>
 
-                {/* Change password */}
-                <section id="password" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
-                    <div className="flex items-center gap-4">
-                        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15">
-                            <Lock className="size-5 text-emerald-400" aria-hidden="true" />
-                        </span>
-                        <div>
-                            <h2 className="text-lg font-semibold text-white md:text-xl">Change password</h2>
-                            <p className="text-sm text-slate-400">Use at least 8 characters, including a number.</p>
+                    {/* Account */}
+                    <section id="account" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
+                        <div className="flex items-center gap-4">
+                            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-purple-500/15">
+                                <User className="size-5 text-purple-400" aria-hidden="true" />
+                            </span>
+                            <div>
+                                <h2 className="text-lg font-semibold text-white md:text-xl">Account</h2>
+                                <p className="text-sm text-slate-400">Your name and email are used for bookings and confirmations.</p>
+                            </div>
                         </div>
-                    </div>
-                </section>
+                    </section>
 
-                {/* Delete account */}
-                <section id="delete-account" className="scroll-mt-24 rounded-xl border border-red-500/40 bg-red-500/5 p-5 md:p-8">
-                    <div className="flex items-center gap-4">
-                        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-red-500/15">
-                            <TriangleAlert className="size-5 text-red-400" aria-hidden="true" />
-                        </span>
-                        <div>
-                            <h2 className="text-lg font-semibold text-red-300 md:text-xl">Delete account</h2>
-                            <p className="text-sm text-slate-400">Permanently removes your account and booking history.</p>
+                    {/* Change password */}
+                    <section id="password" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
+                        <div className="flex items-center gap-4">
+                            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15">
+                                <Lock className="size-5 text-emerald-400" aria-hidden="true" />
+                            </span>
+                            <div>
+                                <h2 className="text-lg font-semibold text-white md:text-xl">Change password</h2>
+                                <p className="text-sm text-slate-400">Use at least 8 characters, including a number.</p>
+                            </div>
                         </div>
-                    </div>
-                </section>
+                    </section>
+
+                    {/* Delete account */}
+                    <section id="delete-account" className="scroll-mt-24 rounded-xl border border-red-500/40 bg-red-500/5 p-5 md:p-8">
+                        <div className="flex items-center gap-4">
+                            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-red-500/15">
+                                <TriangleAlert className="size-5 text-red-400" aria-hidden="true" />
+                            </span>
+                            <div>
+                                <h2 className="text-lg font-semibold text-red-300 md:text-xl">Delete account</h2>
+                                <p className="text-sm text-slate-400">Permanently removes your account and booking history.</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
             </div>
         </main>
     );
