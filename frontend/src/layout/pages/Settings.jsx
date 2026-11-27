@@ -1,6 +1,12 @@
 import { useState } from 'react';
-import { Sun, User, Lock, TriangleAlert } from 'lucide-react';
+import { Sun, Moon, Monitor, User, Lock, TriangleAlert } from 'lucide-react';
 import { validateEmail, validateName, validatePassword, validatePasswordMatch } from '../../validation';
+
+const themeOptions = [
+    { value: 'light', label: 'Light', icon: Sun },
+    { value: 'dark', label: 'Dark', icon: Moon },
+    { value: 'system', label: 'System', icon: Monitor },
+];
 
 function Settings({ user }) {
     const userName = user?.imie || 'User';
@@ -9,6 +15,8 @@ function Settings({ user }) {
         'flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-[#151e32] px-4 py-2 text-sm font-medium text-slate-300 hover:border-white/20 hover:text-white lg:rounded-xl';
     const inputClass =
         'w-full rounded-lg border bg-[#0f1729] px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none';
+    // APPEARANCE
+    const [theme, setTheme] = useState('dark');
     const [name, setName] = useState(user?.imie || '');
     const [email, setEmail] = useState(user?.email || '');
     const [accountErrors, setAccountErrors] = useState({});
@@ -124,6 +132,34 @@ function Settings({ user }) {
                                 <p className="text-sm text-slate-400">Choose how Cars-rent.pl looks.</p>
                             </div>
                         </div>
+
+                        <fieldset className="mt-6">
+                            <legend className="sr-only">Theme</legend>
+                            <div className="grid grid-cols-3 gap-3 md:max-w-lg">
+                                {themeOptions.map((option) => {
+                                    const Icon = option.icon;
+
+                                    return (
+                                        <label
+                                            key={option.value}
+                                            className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-white/10 bg-[#0f1729] p-4 text-sm font-medium text-slate-300 hover:border-white/20 has-checked:border-blue-500 has-checked:bg-blue-500/10 has-checked:text-white has-focus-visible:ring-2 has-focus-visible:ring-blue-500"
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="theme"
+                                                value={option.value}
+                                                checked={theme === option.value}
+                                                onChange={() => setTheme(option.value)}
+                                                className="sr-only"
+                                            />
+                                            <Icon className="size-5" aria-hidden="true" />
+                                            {option.label}
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                            <p className="mt-3 text-xs text-slate-500">Light theme is coming soon.</p>
+                        </fieldset>
                     </section>
 
                     {/* Account */}
