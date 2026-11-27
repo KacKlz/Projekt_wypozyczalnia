@@ -1,4 +1,4 @@
-import { Sun } from 'lucide-react';
+import { Sun, User, Lock, TriangleAlert } from 'lucide-react';
 
 function Settings({ user }) {
     const userName = user?.imie || 'User';
@@ -42,20 +42,41 @@ function Settings({ user }) {
 
                 {/* Account */}
                 <section className="rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
-                    <h2 className="mb-1 text-lg font-semibold text-white md:text-xl">Account</h2>
-                    <p className="text-sm text-slate-400">Your name and email are used for bookings and confirmations.</p>
+                    <div className="flex items-center gap-4">
+                        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-purple-500/15">
+                            <User className="size-5 text-purple-400" aria-hidden="true" />
+                        </span>
+                        <div>
+                            <h2 className="text-lg font-semibold text-white md:text-xl">Account</h2>
+                            <p className="text-sm text-slate-400">Your name and email are used for bookings and confirmations.</p>
+                        </div>
+                    </div>
                 </section>
 
                 {/* Change password */}
                 <section className="rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
-                    <h2 className="mb-1 text-lg font-semibold text-white md:text-xl">Change password</h2>
-                    <p className="text-sm text-slate-400">Use at least 8 characters, including a number.</p>
+                    <div className="flex items-center gap-4">
+                        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15">
+                            <Lock className="size-5 text-emerald-400" aria-hidden="true" />
+                        </span>
+                        <div>
+                            <h2 className="text-lg font-semibold text-white md:text-xl">Change password</h2>
+                            <p className="text-sm text-slate-400">Use at least 8 characters, including a number.</p>
+                        </div>
+                    </div>
                 </section>
 
                 {/* Delete account */}
                 <section className="rounded-xl border border-red-500/40 bg-red-500/5 p-5 md:p-8">
-                    <h2 className="mb-1 text-lg font-semibold text-red-300 md:text-xl">Delete account</h2>
-                    <p className="text-sm text-slate-400">Permanently removes your account and booking history.</p>
+                    <div className="flex items-center gap-4">
+                        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-red-500/15">
+                            <TriangleAlert className="size-5 text-red-400" aria-hidden="true" />
+                        </span>
+                        <div>
+                            <h2 className="text-lg font-semibold text-red-300 md:text-xl">Delete account</h2>
+                            <p className="text-sm text-slate-400">Permanently removes your account and booking history.</p>
+                        </div>
+                    </div>
                 </section>
             </div>
         </main>
