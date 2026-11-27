@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Sun, Moon, Monitor, User, Lock, TriangleAlert } from 'lucide-react';
 import { validateEmail, validateName, validatePassword, validatePasswordMatch } from '../../validation';
+import SettingsCard from '../settings/SettingsCard';
+
 
 const themeOptions = [
     { value: 'light', label: 'Light', icon: Sun },
@@ -15,13 +17,14 @@ function Settings({ user }) {
         'flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-[#151e32] px-4 py-2 text-sm font-medium text-slate-300 hover:border-white/20 hover:text-white lg:rounded-xl';
     const inputClass =
         'w-full rounded-lg border bg-[#0f1729] px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none';
+
     // APPEARANCE
     const [theme, setTheme] = useState('dark');
+
+    // ACCOUNT
     const [name, setName] = useState(user?.imie || '');
     const [email, setEmail] = useState(user?.email || '');
     const [accountErrors, setAccountErrors] = useState({});
-
-    // ACCOUNT
     function handleAccountSubmit(event) {
         event.preventDefault();
 
@@ -122,17 +125,13 @@ function Settings({ user }) {
                 {/* Settings sections */}
                 <div className="mt-6 flex flex-col gap-4 md:gap-6 lg:mt-0">
                     {/* Appearance */}
-                    <section id="appearance" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
-                        <div className="flex items-center gap-4">
-                            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/15">
-                                <Sun className="size-5 text-blue-400" aria-hidden="true" />
-                            </span>
-                            <div>
-                                <h2 className="text-lg font-semibold text-white md:text-xl">Appearance</h2>
-                                <p className="text-sm text-slate-400">Choose how Cars-rent.pl looks.</p>
-                            </div>
-                        </div>
-
+                    <SettingsCard
+                        id="appearance"
+                        icon={Sun}
+                        color="blue"
+                        title="Appearance"
+                        description="Choose how Cars-rent.pl looks."
+                    >
                         <fieldset className="mt-6">
                             <legend className="sr-only">Theme</legend>
                             <div className="grid grid-cols-3 gap-3 md:max-w-lg">
@@ -160,7 +159,7 @@ function Settings({ user }) {
                             </div>
                             <p className="mt-3 text-xs text-slate-500">Light theme is coming soon.</p>
                         </fieldset>
-                    </section>
+                    </SettingsCard>
 
                     {/* Account */}
                     <section id="account" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
