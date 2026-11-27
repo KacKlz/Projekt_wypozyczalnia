@@ -52,9 +52,18 @@ function Fleet() {
         setBookingError('');
 
         try {
+            const token =
+                localStorage.getItem('token') ||
+                localStorage.getItem('accessToken') ||
+                sessionStorage.getItem('token');
+
             const response = await fetch(`${API_URL}/${vehicleId}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
                 body: JSON.stringify({ is_rented: true }),
             });
 
@@ -79,7 +88,7 @@ function Fleet() {
             setBookingId(null);
         }
     };
-
+    
     const sortedVehicles = useMemo(() => {
         return [...vehicles].sort((a, b) => {
             if (sortBy === 'price-asc') {
