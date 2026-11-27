@@ -8,7 +8,6 @@ import Home from './layout/home/Home';
 import Fleet from './layout/pages/Fleet';
 import About from './layout/pages/About';
 import Contact from './layout/pages/Contact';
-import Booking from './layout/pages/Booking';
 import MyBookings from './layout/pages/MyBookings';
 import AdminPanel from './layout/admin/AdminPanel';
 
@@ -108,18 +107,6 @@ function App() {
 
                 {/* Contact */}
                 <Route path="/contact" element={<Contact />} />
-
-                {/* Booking */}
-                <Route
-                    path="/booking"
-                    element={
-                        user ? (
-                            <Booking />
-                        ) : (
-                            <Navigate to="/login" replace />
-                        )
-                    }
-                />
 
                 {/* My bookings */}
                 <Route
