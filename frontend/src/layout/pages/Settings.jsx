@@ -7,6 +7,8 @@ function Settings({ user }) {
     const userInitial = userName.charAt(0).toUpperCase();
     const navLinkClass =
         'flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-[#151e32] px-4 py-2 text-sm font-medium text-slate-300 hover:border-white/20 hover:text-white lg:rounded-xl';
+    const inputClass =
+        'w-full rounded-lg border bg-[#0f1729] px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none';
     const [name, setName] = useState(user?.imie || '');
     const [email, setEmail] = useState(user?.email || '');
     const [accountErrors, setAccountErrors] = useState({});
@@ -109,10 +111,14 @@ function Settings({ user }) {
                                         type="text"
                                         value={name}
                                         onChange={(event) => setName(event.target.value)}
-                                        className="w-full rounded-lg border border-white/10 bg-[#0f1729] px-4 py-2.5 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+                                        aria-invalid={Boolean(accountErrors.name)}
+                                        aria-describedby={accountErrors.name ? 'account-name-error' : undefined}
+                                        className={`${inputClass} ${accountErrors.name ? 'border-red-500' : 'border-white/10 focus:border-blue-500'}`}
                                     />
                                     {accountErrors.name && (
-                                        <p className="mt-1.5 text-sm text-red-400">{accountErrors.name}</p>
+                                        <p id="account-name-error" className="mt-1.5 text-sm text-red-400">
+                                            {accountErrors.name}
+                                        </p>
                                     )}
                                 </div>
 
@@ -125,10 +131,14 @@ function Settings({ user }) {
                                         type="email"
                                         value={email}
                                         onChange={(event) => setEmail(event.target.value)}
-                                        className="w-full rounded-lg border border-white/10 bg-[#0f1729] px-4 py-2.5 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+                                        aria-invalid={Boolean(accountErrors.email)}
+                                        aria-describedby={accountErrors.email ? 'account-email-error' : undefined}
+                                        className={`${inputClass} ${accountErrors.email ? 'border-red-500' : 'border-white/10 focus:border-blue-500'}`}
                                     />
                                     {accountErrors.email && (
-                                        <p className="mt-1.5 text-sm text-red-400">{accountErrors.email}</p>
+                                        <p id="account-email-error" className="mt-1.5 text-sm text-red-400">
+                                            {accountErrors.email}
+                                        </p>
                                     )}
                                 </div>
                             </div>
