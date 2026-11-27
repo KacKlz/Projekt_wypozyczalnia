@@ -1,10 +1,549 @@
-import '../../styles/pages/Page.css';
+import { useState } from 'react';
+
+const RATE_LIMIT_KEY = 'contact_form_submissions';
+const MAX_SUBMISSIONS_PER_HOUR = 2;
+const ONE_HOUR_MS = 60 * 60 * 1000;
 
 function Contact() {
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        subject: '',
+        message: '',
+        acceptedPrivacy: false,
+    });
+
+    const [errors, setErrors] = useState({});
+    const [hasSubmitted, setHasSubmitted] = useState(false);
+    const [submittedStatus, setSubmittedStatus] = useState(null);
+    const [rateLimitMessage, setRateLimitMessage] = useState('');
+    const [serverErrorMessage, setServerErrorMessage] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const countWords = (text) => {
+        if (!text) return 0;
+        const words = text.trim().split(/\s+/).filter(Boolean);
+        return words.length;
+    };
+
+    const getRecentSubmissions = () => {
+        try {
+            const raw = localStorage.getItem(RATE_LIMIT_KEY);
+            if (!raw) return [];
+            const timestamps = JSON.parse(raw);
+            if (!Array.isArray(timestamps)) return [];
+            const now = Date.now();
+            return timestamps.filter((ts) => now - ts < ONE_HOUR_MS);
+        } catch {
+            return [];
+        }
+    };
+
+    const recordSubmission = () => {
+        try {
+            const recent = getRecentSubmissions();
+            recent.push(Date.now());
+            localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(recent));
+        } catch {
+            // Ignore localStorage access errors
+        }
+    };
+
+    const validateField = (name, value) => {
+        switch (name) {
+            case 'name': {
+                const trimmed = (value || '').trim();
+                if (!trimmed) {
+                    return 'Full name is required.';
+                }
+                const lettersRegex = /^[a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ\s-]+$/;
+                if (!lettersRegex.test(trimmed)) {
+                    return 'Name may only contain letters (no digits or symbols).';
+                }
+                const letterCount = (trimmed.match(/[a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g) || []).length;
+                if (letterCount < 3) {
+                    return 'Name must contain at least 3 letters.';
+                }
+                if (trimmed.length > 50) {
+                    return 'Name cannot exceed 50 characters.';
+                }
+                return '';
+            }
+
+            case 'email': {
+                const trimmed = (value || '').trim();
+                if (!trimmed) {
+                    return 'Email address is required.';
+                }
+                if (!trimmed.includes('@') || !trimmed.includes('.com')) {
+                    return 'Email address must contain "@" and the ".com" domain.';
+                }
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(trimmed)) {
+                    return 'Please enter a valid email address.';
+                }
+                return '';
+            }
+
+            case 'subject': {
+                const trimmed = (value || '').trim();
+                if (!trimmed) {
+                    return 'Subject is required.';
+                }
+                const wordCount = countWords(trimmed);
+                if (wordCount < 5) {
+                    return `Subject must contain at least 5 words (current: ${wordCount}).`;
+                }
+                if (wordCount > 200) {
+                    return `Subject cannot exceed 200 words (current: ${wordCount}).`;
+                }
+                return '';
+            }
+
+            case 'message': {
+                const trimmed = (value || '').trim();
+                if (!trimmed) {
+                    return 'Message is required.';
+                }
+                if (trimmed.length < 5) {
+                    return `Message must be at least 5 characters long (current: ${trimmed.length}).`;
+                }
+                if (trimmed.length > 300) {
+                    return `Message cannot exceed 300 characters (current: ${trimmed.length}).`;
+                }
+                return '';
+            }
+
+            case 'acceptedPrivacy': {
+                if (!value) {
+                    return 'You must accept the privacy policy to continue.';
+                }
+                return '';
+            }
+
+            default:
+                return '';
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+        const fields = ['name', 'email', 'subject', 'message', 'acceptedPrivacy'];
+
+        fields.forEach((field) => {
+            const errorMsg = validateField(field, formData[field]);
+            if (errorMsg) {
+                newErrors[field] = errorMsg;
+            }
+        });
+
+        return newErrors;
+    };
+
+    const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        const fieldValue = type === 'checkbox' ? checked : value;
+
+        setFormData((prev) => ({
+            ...prev,
+            [name]: fieldValue,
+        }));
+
+        if (hasSubmitted) {
+            const errorMsg = validateField(name, fieldValue);
+            setErrors((prev) => ({
+                ...prev,
+                [name]: errorMsg,
+            }));
+        }
+
+        if (submittedStatus === 'success') {
+            setSubmittedStatus(null);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        const recentSubmissions = getRecentSubmissions();
+        if (recentSubmissions.length >= MAX_SUBMISSIONS_PER_HOUR) {
+            const oldestTimestamp = Math.min(...recentSubmissions);
+            const remainingMinutes = Math.max(1, Math.ceil((ONE_HOUR_MS - (Date.now() - oldestTimestamp)) / 60000));
+            setRateLimitMessage(
+                `Hourly limit reached (maximum ${MAX_SUBMISSIONS_PER_HOUR} messages per hour). Please try again in approx. ${remainingMinutes} min.`
+            );
+            setSubmittedStatus('rate-limit');
+            return;
+        }
+
+        setRateLimitMessage('');
+        setServerErrorMessage('');
+        setHasSubmitted(true);
+
+        const validationErrors = validateForm();
+        setErrors(validationErrors);
+
+        if (Object.keys(validationErrors).length > 0) {
+            setSubmittedStatus('error');
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+
+            const response = await fetch('/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: formData.name.trim(),
+                    email: formData.email.trim(),
+                    subject: formData.subject.trim(),
+                    message: formData.message.trim(),
+                }),
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (response.status === 429) {
+                setRateLimitMessage(data.message || 'Hourly limit of 2 messages exceeded.');
+                setSubmittedStatus('rate-limit');
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Server error occurred while sending the message.');
+            }
+
+            recordSubmission();
+            setSubmittedStatus('success');
+            setHasSubmitted(false);
+            setFormData({
+                name: '',
+                email: '',
+                subject: '',
+                message: '',
+                acceptedPrivacy: false,
+            });
+        } catch (error) {
+            setServerErrorMessage(error.message || 'Failed to send message. Please try again later.');
+            setSubmittedStatus('server-error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
-        <main className="page">
-            <h1>This will be a contact subpage..</h1>
-        </main>
+        <div className="w-full min-h-screen bg-[#0b1120] text-white overflow-x-hidden box-border">
+            <main className="w-full max-w-[1280px] !mx-auto !px-6 sm:!px-10 lg:!px-12 !pt-28 !pb-16 box-border">
+                <div className="!mb-10 text-left">
+                    <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight !mb-3">
+                        Contact Us
+                    </h1>
+                    <p className="text-base sm:text-lg text-slate-400 max-w-2xl leading-relaxed">
+                        Have a question about a reservation or our offer? Write or call us.
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start w-full">
+                    <div className="lg:col-span-5 flex flex-col gap-6 w-full min-w-0">
+                        <div className="flex flex-col gap-4 w-full">
+                            <div className="w-full bg-[#151e32] border border-white/10 rounded-xl !p-5 sm:!p-6 flex items-center gap-4 sm:gap-5 shadow-lg transition-all duration-200 hover:border-blue-500/40 hover:-translate-y-0.5 box-border">
+                                <div className="w-12 h-12 min-w-[3rem] rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center shrink-0">
+                                    <svg
+                                        className="w-6 h-6 text-blue-500"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                                    </svg>
+                                </div>
+                                <div className="flex flex-col min-w-0 flex-1">
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 !mb-1">
+                                        Phone Number
+                                    </span>
+                                    <a
+                                        href="tel:+48123456789"
+                                        className="text-base sm:text-lg font-bold text-white break-words transition-colors hover:text-blue-400"
+                                    >
+                                        +48 123 456 789
+                                    </a>
+                                    <span className="text-xs sm:text-sm text-slate-400 !mt-1">
+                                        Helpline: Mon – Fri 8:00 AM – 8:00 PM
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="w-full bg-[#151e32] border border-white/10 rounded-xl !p-5 sm:!p-6 flex items-center gap-4 sm:gap-5 shadow-lg transition-all duration-200 hover:border-blue-500/40 hover:-translate-y-0.5 box-border">
+                                <div className="w-12 h-12 min-w-[3rem] rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center shrink-0">
+                                    <svg
+                                        className="w-6 h-6 text-blue-500"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <rect width="20" height="16" x="2" y="4" rx="2" />
+                                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                                    </svg>
+                                </div>
+                                <div className="flex flex-col min-w-0 flex-1">
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 !mb-1">
+                                        Email Address
+                                    </span>
+                                    <a
+                                        href="mailto:testwypozyczalnia@gmail.com"
+                                        className="text-base sm:text-lg font-bold text-white break-words transition-colors hover:text-blue-400"
+                                    >
+                                        testwypozyczalnia@gmail.com
+                                    </a>
+                                    <span className="text-xs sm:text-sm text-slate-400 !mt-1">
+                                        We respond within 24 hours
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="w-full bg-[#151e32] border border-white/10 rounded-xl !p-5 sm:!p-6 flex items-center gap-4 sm:gap-5 shadow-lg transition-all duration-200 hover:border-blue-500/40 hover:-translate-y-0.5 box-border">
+                                <div className="w-12 h-12 min-w-[3rem] rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center shrink-0">
+                                    <svg
+                                        className="w-6 h-6 text-blue-500"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                                        <circle cx="12" cy="10" r="3" />
+                                    </svg>
+                                </div>
+                                <div className="flex flex-col min-w-0 flex-1">
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 !mb-1">
+                                        Main Office
+                                    </span>
+                                    <p className="text-base sm:text-lg font-bold text-white break-words">
+                                        45 Krakowska St., 33-100 Tarnow
+                                    </p>
+                                    <span className="text-xs sm:text-sm text-slate-400 !mt-1">
+                                        Vehicle pickup and return 24/7
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="w-full bg-[#151e32] border border-white/10 rounded-xl overflow-hidden shadow-lg box-border">
+                            <div className="!px-5 !py-3.5 border-b border-white/10 bg-[#0b1120]/50 flex items-center justify-between">
+                                <span className="text-xs sm:text-sm font-semibold text-slate-300 tracking-wide">
+                                    Service Area – Tarnow
+                                </span>
+                            </div>
+                            <iframe
+                                title="Rental location – Tarnow"
+                                src="https://www.google.com/maps?q=Tarn%C3%B3w&hl=en&z=12&output=embed"
+                                className="w-full h-[280px] sm:h-[300px] border-0 block"
+                                loading="lazy"
+                                referrerPolicy="no-referrer-when-downgrade"
+                            ></iframe>
+                        </div>
+                    </div>
+                    <div className="lg:col-span-7 flex flex-col gap-6 w-full min-w-0">
+                        <div className="w-full bg-[#151e32] border border-white/10 rounded-xl !p-6 sm:!p-8 lg:!p-10 shadow-xl box-border">
+                            <div className="!mb-7">
+                                <h2 className="text-2xl font-bold text-white tracking-tight !mb-2">
+                                    Send Us a Message
+                                </h2>
+                                <p className="text-sm text-slate-400 leading-relaxed">
+                                    Fill out the form and we will get back to you as soon as possible.
+                                </p>
+                            </div>
+
+                            {submittedStatus === 'success' && (
+                                <div className="!mb-6 !p-4 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-sm font-medium flex items-center gap-3">
+                                    <svg className="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <span>Your message has been sent! We will get back to you as soon as possible.</span>
+                                </div>
+                            )}
+
+                            {submittedStatus === 'rate-limit' && rateLimitMessage && (
+                                <div className="!mb-6 !p-4 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300 text-sm font-medium flex items-center gap-3">
+                                    <svg className="w-5 h-5 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>{rateLimitMessage}</span>
+                                </div>
+                            )}
+
+                            {submittedStatus === 'server-error' && serverErrorMessage && (
+                                <div className="!mb-6 !p-4 rounded-lg bg-red-500/15 border border-red-500/40 text-red-300 text-sm font-medium flex items-center gap-3">
+                                    <svg className="w-5 h-5 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    <span>{serverErrorMessage}</span>
+                                </div>
+                            )}
+
+                            {submittedStatus === 'error' && Object.keys(errors).length > 0 && (
+                                <div className="!mb-6 !p-4 rounded-lg bg-red-500/15 border border-red-500/40 text-red-300 text-sm font-medium flex items-center gap-3">
+                                    <svg className="w-5 h-5 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    <span>Please fill in all required fields correctly.</span>
+                                </div>
+                            )}
+
+                            <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5 w-full">
+                                <div className="flex flex-col gap-2 w-full">
+                                    <label htmlFor="contact-name" className="text-sm font-semibold text-slate-300">
+                                        Full Name <span className="text-red-400">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="contact-name"
+                                        name="name"
+                                        required
+                                        disabled={isSubmitting}
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        placeholder="e.g. John Doe"
+                                        className={`w-full h-12 !px-4 !py-2.5 bg-[#0b1120] rounded-lg text-white text-base placeholder:text-slate-500 outline-none transition duration-150 box-border disabled:opacity-60 ${
+                                            hasSubmitted && errors.name
+                                                ? 'border-2 border-red-500 bg-red-950/15 focus:ring-2 focus:ring-red-500/20'
+                                                : 'border border-slate-700/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
+                                        }`}
+                                    />
+                                    {hasSubmitted && errors.name && (
+                                        <p className="text-xs text-red-400 font-medium !mt-0.5">{errors.name}</p>
+                                    )}
+                                </div>
+
+                                <div className="flex flex-col gap-2 w-full">
+                                    <label htmlFor="contact-email" className="text-sm font-semibold text-slate-300">
+                                        Email Address <span className="text-red-400">*</span>
+                                    </label>
+                                    <input
+                                        type="email"
+                                        id="contact-email"
+                                        name="email"
+                                        required
+                                        disabled={isSubmitting}
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        placeholder="e.g. john.doe@example.com"
+                                        className={`w-full h-12 !px-4 !py-2.5 bg-[#0b1120] rounded-lg text-white text-base placeholder:text-slate-500 outline-none transition duration-150 box-border disabled:opacity-60 ${
+                                            hasSubmitted && errors.email
+                                                ? 'border-2 border-red-500 bg-red-950/15 focus:ring-2 focus:ring-red-500/20'
+                                                : 'border border-slate-700/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
+                                        }`}
+                                    />
+                                    {hasSubmitted && errors.email && (
+                                        <p className="text-xs text-red-400 font-medium !mt-0.5">{errors.email}</p>
+                                    )}
+                                </div>
+
+                                <div className="flex flex-col gap-2 w-full">
+                                    <label htmlFor="contact-subject" className="text-sm font-semibold text-slate-300">
+                                        Subject <span className="text-red-400">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="contact-subject"
+                                        name="subject"
+                                        required
+                                        disabled={isSubmitting}
+                                        value={formData.subject}
+                                        onChange={handleChange}
+                                        placeholder="e.g. Long-term rental inquiry"
+                                        className={`w-full h-12 !px-4 !py-2.5 bg-[#0b1120] rounded-lg text-white text-base placeholder:text-slate-500 outline-none transition duration-150 box-border disabled:opacity-60 ${
+                                            hasSubmitted && errors.subject
+                                                ? 'border-2 border-red-500 bg-red-950/15 focus:ring-2 focus:ring-red-500/20'
+                                                : 'border border-slate-700/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
+                                        }`}
+                                    />
+                                    {hasSubmitted && errors.subject && (
+                                        <p className="text-xs text-red-400 font-medium !mt-0.5">{errors.subject}</p>
+                                    )}
+                                </div>
+
+                                <div className="flex flex-col gap-2 w-full">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <label htmlFor="contact-message" className="text-sm font-semibold text-slate-300">
+                                            Message <span className="text-red-400">*</span>
+                                        </label>
+                                        <span
+                                            className={`text-xs font-medium ${
+                                                formData.message.trim().length > 300
+                                                    ? 'text-red-400'
+                                                    : 'text-slate-400'
+                                            }`}
+                                        >
+                                            {formData.message.trim().length} / 300
+                                        </span>
+                                    </div>
+                                    <textarea
+                                        id="contact-message"
+                                        name="message"
+                                        rows="5"
+                                        required
+                                        disabled={isSubmitting}
+                                        minLength={5}
+                                        maxLength={300}
+                                        value={formData.message}
+                                        onChange={handleChange}
+                                        placeholder="Enter your message (5–300 characters)..."
+                                        className={`w-full min-h-[135px] max-h-[280px] !p-4 bg-[#0b1120] rounded-lg text-white text-base placeholder:text-slate-500 outline-none transition duration-150 resize-y box-border disabled:opacity-60 ${
+                                            hasSubmitted && errors.message
+                                                ? 'border-2 border-red-500 bg-red-950/15 focus:ring-2 focus:ring-red-500/20'
+                                                : 'border border-slate-700/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
+                                        }`}
+                                    />
+                                    {hasSubmitted && errors.message && (
+                                        <p className="text-xs text-red-400 font-medium !mt-0.5">{errors.message}</p>
+                                    )}
+                                </div>
+
+                                <div className="!pt-1">
+                                    <label className="flex items-start gap-3 text-sm text-slate-300 leading-snug cursor-pointer select-none">
+                                        <input
+                                            type="checkbox"
+                                            id="contact-privacy"
+                                            name="acceptedPrivacy"
+                                            required
+                                            disabled={isSubmitting}
+                                            checked={formData.acceptedPrivacy}
+                                            onChange={handleChange}
+                                            className="!mt-0.5 w-4 h-4 rounded border-slate-700 text-blue-600 accent-blue-600 shrink-0 cursor-pointer"
+                                        />
+                                        <span>
+                                            I accept the privacy policy and agree to be contacted regarding my inquiry <span className="text-red-400">*</span>
+                                        </span>
+                                    </label>
+                                    {hasSubmitted && errors.acceptedPrivacy && (
+                                        <p className="text-xs text-red-400 font-medium !mt-1.5 !ml-7">
+                                            {errors.acceptedPrivacy}
+                                        </p>
+                                    )}
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="w-full h-12 bg-blue-600 hover:bg-blue-500 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-base rounded-lg transition duration-150 shadow-md cursor-pointer !mt-2"
+                                >
+                                    {isSubmitting ? 'Sending...' : 'Send Message'}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
     );
 }
 

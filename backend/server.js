@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const dns = require("dns");
@@ -6,8 +7,9 @@ const authRoutes = require("./routes/auth");
 const vehicleRoutes = require("./routes/vehicles");
 const bookingRoutes = require("./routes/bookings");
 const cors = require("cors");
+const contactRoutes = require("./routes/contactRoutes");
+const adminCarsRoutes = require("./routes/adminCars");
 
-require("dotenv").config();
 
 const PORT = process.env.PORT || 3001;
 
@@ -31,6 +33,8 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/contact", contactRoutes);
+app.use("/api/admin/cars", adminCarsRoutes);
 
 if (!process.env.MONGO_URI) {
     console.error("Blad: brak MONGO_URI w pliku .env");
