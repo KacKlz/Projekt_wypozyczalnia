@@ -29,3 +29,18 @@ export const validatePassword = (password) => {
 
     return null;
 };
+
+// Validate first name (required, at least 2 characters)
+export const validateName = (name) => {
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+        return 'First name is required.';
+    }
+
+    if (trimmedName.length < 2) {
+        return 'First name must be at least 2 characters.';
+    }
+
+    return null;
+};

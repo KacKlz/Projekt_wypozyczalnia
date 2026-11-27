@@ -1,5 +1,6 @@
 import { Sun, User, Lock, TriangleAlert } from 'lucide-react';
 import { useState } from 'react';
+import { validateEmail, validateName } from '../../validation';
 
 function Settings({ user }) {
     const userName = user?.imie || 'User';
@@ -8,9 +9,21 @@ function Settings({ user }) {
         'flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-[#151e32] px-4 py-2 text-sm font-medium text-slate-300 hover:border-white/20 hover:text-white lg:rounded-xl';
     const [name, setName] = useState(user?.imie || '');
     const [email, setEmail] = useState(user?.email || '');
+    const [accountErrors, setAccountErrors] = useState({});
 
     function handleAccountSubmit(event) {
         event.preventDefault();
+
+        const errors = {
+            name: validateName(name),
+            email: validateEmail(email),
+        };
+        setAccountErrors(errors);
+
+        if (errors.name || errors.email) {
+            return;
+        }
+
         console.log('Account data:', { name, email });
     }
 
@@ -74,19 +87,18 @@ function Settings({ user }) {
                     </section>
 
                     {/* Account */}
-                    {/* Account */}
                     <section id="account" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
                         <div className="flex items-center gap-4">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-purple-500/15">
-            <User className="size-5 text-purple-400" aria-hidden="true" />
-        </span>
+                            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-purple-500/15">
+                                <User className="size-5 text-purple-400" aria-hidden="true" />
+                            </span>
                             <div>
                                 <h2 className="text-lg font-semibold text-white md:text-xl">Account</h2>
                                 <p className="text-sm text-slate-400">Your name and email are used for bookings and confirmations.</p>
                             </div>
                         </div>
 
-                        <form onSubmit={handleAccountSubmit} className="mt-6">
+                        <form onSubmit={handleAccountSubmit} noValidate className="mt-6">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div>
                                     <label htmlFor="account-name" className="mb-1.5 block text-sm font-medium text-slate-300">
@@ -99,6 +111,9 @@ function Settings({ user }) {
                                         onChange={(event) => setName(event.target.value)}
                                         className="w-full rounded-lg border border-white/10 bg-[#0f1729] px-4 py-2.5 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
                                     />
+                                    {accountErrors.name && (
+                                        <p className="mt-1.5 text-sm text-red-400">{accountErrors.name}</p>
+                                    )}
                                 </div>
 
                                 <div>
@@ -112,6 +127,9 @@ function Settings({ user }) {
                                         onChange={(event) => setEmail(event.target.value)}
                                         className="w-full rounded-lg border border-white/10 bg-[#0f1729] px-4 py-2.5 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
                                     />
+                                    {accountErrors.email && (
+                                        <p className="mt-1.5 text-sm text-red-400">{accountErrors.email}</p>
+                                    )}
                                 </div>
                             </div>
 
