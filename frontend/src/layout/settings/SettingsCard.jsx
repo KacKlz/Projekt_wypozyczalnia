@@ -9,7 +9,8 @@ const colorClasses = {
 
 // Shared layout for settings sections: icon badge, title, description and content
 function SettingsCard({ id, icon: Icon, color = 'blue', title, description, danger = false, children }) {
-    const colors = colorClasses[color];
+    // Fall back to blue if an unknown color is passed, instead of crashing
+    const colors = colorClasses[color] ?? colorClasses.blue;
 
     return (
         // scroll-mt-24 keeps the title visible below the sticky header when jumping to #id

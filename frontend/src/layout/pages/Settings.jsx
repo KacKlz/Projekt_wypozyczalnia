@@ -11,6 +11,17 @@ const themeOptions = [
     { value: 'system', label: 'System', icon: Monitor },
 ];
 
+const DEFAULT_ERROR = 'Something went wrong. Please try again.';
+
+// Backend field names -> form state names (the API uses "imie", the form uses "name")
+const accountFieldMap = { imie: 'name', email: 'email' };
+
+// The Vite proxy can return HTML or an empty body (e.g. 502 when the backend is down),
+// so a failed JSON parse should not throw
+function readJson(response) {
+    return response.json().catch(() => ({}));
+}
+
 function Settings({ user, setUser }) {
     const userName = user?.imie || 'User';
     const userInitial = userName.charAt(0).toUpperCase();
@@ -52,20 +63,30 @@ function Settings({ user, setUser }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ imie: name, email }),
             });
-            const data = await res.json();
+            const data = await readJson(res);
+
+            // Session expired or account no longer exists: the /settings route redirects to /login
+            if (res.status === 401) {
+                setUser(null);
+                return;
+            }
 
             if (!res.ok) {
-                // 409 = email taken: show it under the email field
-                if (res.status === 409) {
-                    setAccountErrors({ email: data.message });
+                const field = accountFieldMap[data.field];
+
+                if (field) {
+                    setAccountErrors({ [field]: data.message });
                 } else {
-                    setAccountFeedback({ type: 'error', text: data.message });
+                    setAccountFeedback({ type: 'error', text: data.message || DEFAULT_ERROR });
                 }
                 return;
             }
 
             // Updates the header avatar and the profile card
             setUser(data);
+            // Show the values saved by the server (trimmed name, lowercase email)
+            setName(data.imie);
+            setEmail(data.email);
             setAccountFeedback({ type: 'success', text: 'Changes saved.' });
         } catch {
             setAccountFeedback({ type: 'error', text: 'Could not connect to the server.' });
@@ -109,14 +130,19 @@ function Settings({ user, setUser }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ currentPassword, newPassword }),
             });
-            const data = await res.json();
+            const data = await readJson(res);
+
+            if (res.status === 401) {
+                setUser(null);
+                return;
+            }
 
             if (!res.ok) {
                 // The backend says which field the error belongs to (e.g. "currentPassword")
                 if (data.field) {
                     setPasswordErrors({ [data.field]: data.message });
                 } else {
-                    setPasswordFeedback({ type: 'error', text: data.message });
+                    setPasswordFeedback({ type: 'error', text: data.message || DEFAULT_ERROR });
                 }
                 return;
             }
@@ -145,11 +171,16 @@ function Settings({ user, setUser }) {
 
         try {
             const res = await fetch('/api/users/me', { method: 'DELETE' });
-            const data = await res.json();
+            const data = await readJson(res);
+
+            if (res.status === 401) {
+                setUser(null);
+                return;
+            }
 
             if (!res.ok) {
                 // e.g. 409 active bookings, 403 last admin
-                setDeleteError(data.message);
+                setDeleteError(data.message || DEFAULT_ERROR);
                 return;
             }
 
@@ -245,7 +276,7 @@ function Settings({ user, setUser }) {
                                     );
                                 })}
                             </div>
-                            <p className="mt-3 text-xs text-slate-500">Light theme is coming soon.</p>
+                            <p className="mt-3 text-xs text-slate-400">Light theme is coming soon.</p>
                         </fieldset>
                     </SettingsCard>
 
@@ -281,7 +312,7 @@ function Settings({ user, setUser }) {
                             <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
                                 {accountFeedback && (
                                     <p
-                                        role="status"
+                                        role={accountFeedback.type === 'error' ? 'alert' : 'status'}
                                         className={`text-sm ${accountFeedback.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}
                                     >
                                         {accountFeedback.text}
@@ -342,7 +373,7 @@ function Settings({ user, setUser }) {
                             <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
                                 {passwordFeedback && (
                                     <p
-                                        role="status"
+                                        role={passwordFeedback.type === 'error' ? 'alert' : 'status'}
                                         className={`text-sm ${passwordFeedback.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}
                                     >
                                         {passwordFeedback.text}

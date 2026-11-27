@@ -1,7 +1,9 @@
-// Validate email format
+// Validate email format (keep in sync with backend/utils/validation.js)
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export const validateEmail = (email) => {
-    if (!email || !email.includes('@')) {
-        return "Email address must contain '@'.";
+    if (!email || !EMAIL_REGEX.test(email.trim())) {
+        return 'Please enter a valid email address.';
     }
     return null;
 };
