@@ -1,6 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const Vehicle = require("../models/Vehicle");
+const Booking = require("../models/Booking");
+const authMiddleware = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -35,7 +37,7 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -43,17 +45,55 @@ router.patch("/:id", async (req, res) => {
             return res.status(400).json({ message: "Nieprawidlowe ID pojazdu" });
         }
 
-        const updatedVehicle = await Vehicle.findByIdAndUpdate(
-            id,
-            { $set: { is_rented: true } },
-            { new: true, runValidators: true }
-        );
-
-        if (!updatedVehicle) {
+        const vehicle = await Vehicle.findById(id);
+        if (!vehicle) {
             return res.status(404).json({ message: "Nie znaleziono pojazdu" });
         }
 
-        res.json(updatedVehicle);
+        if (vehicle.is_rented) {
+            return res.status(400).json({ message: "Ten pojazd jest już wypożyczony" });
+        }
+
+        vehicle.is_rented = true;
+        await vehicle.save();
+
+        // Create a matching Booking document for the authenticated user
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        const bookingNumber = `BK-${new Date().getFullYear()}-${randomNum}`;
+
+        const specs = [
+            vehicle.fuel_type || null,
+            vehicle.doors ? `${vehicle.doors} doors` : null,
+            vehicle.avg_fuel_consumption ? `${vehicle.avg_fuel_consumption} L/100km` : null,
+            vehicle.mileage ? `${vehicle.mileage.toLocaleString()} km` : null
+        ].filter(Boolean);
+
+        const newBooking = await Booking.create({
+            userId: req.userId,
+            vehicleId: vehicle._id,
+            bookingNumber,
+            carName: `${vehicle.make} ${vehicle.model}`,
+            category: vehicle.fuel_type || null,
+            plate: null,
+            image: null,
+            status: "active",
+            statusLabel: "Active",
+            pickupDate: null,
+            pickupLocation: null,
+            returnDate: null,
+            returnLocation: null,
+            duration: null,
+            dailyRate: vehicle.daily_rate ? `${vehicle.daily_rate} PLN` : null,
+            totalPrice: null,
+            paymentStatus: null,
+            specs: specs.length > 0 ? specs : null,
+            details: null
+        });
+
+        res.json({
+            ...vehicle.toObject(),
+            booking: newBooking
+        });
     } catch (error) {
         console.error("Blad rezerwacji pojazdu:", error);
         res.status(500).json({ message: "Nie udalo sie zarezerwowac pojazdu" });
