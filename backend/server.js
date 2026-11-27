@@ -5,6 +5,7 @@ const dns = require("dns");
 const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/auth");
 const vehicleRoutes = require("./routes/vehicles");
+const bookingRoutes = require("./routes/bookings");
 const cors = require("cors");
 const contactRoutes = require("./routes/contactRoutes");
 const adminCarsRoutes = require("./routes/adminCars");
@@ -31,6 +32,7 @@ app.use(
 
 app.use("/api/auth", authRoutes);
 app.use("/api/vehicles", vehicleRoutes);
+app.use("/api/bookings", bookingRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/admin/cars", adminCarsRoutes);
 
