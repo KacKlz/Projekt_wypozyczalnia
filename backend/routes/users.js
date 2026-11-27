@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const Booking = require("../models/Booking");
 const authMiddleware = require("../middleware/auth");
+const { passwordChangeLimiter } = require("../middleware/rateLimit");
 const { EMAIL_REGEX, validatePassword } = require("../utils/validation");
 
 const router = express.Router();
@@ -53,7 +54,7 @@ router.patch("/me", authMiddleware, async (req, res) => {
 });
 
 // PATCH /api/users/me/password - Change the logged-in user's password
-router.patch("/me/password", authMiddleware, async (req, res) => {
+router.patch("/me/password", authMiddleware, passwordChangeLimiter, async (req, res) => {
     const { currentPassword, newPassword } = req.body ?? {};
 
     if (typeof currentPassword !== "string" || typeof newPassword !== "string") {
