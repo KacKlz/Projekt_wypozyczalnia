@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 
 const getBookingId = (item) => String(item.id ?? item._id);
 
-// SVG Icons
+
 const Icons = {
     Calendar: () => (
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block align-middle mr-1.5">
@@ -56,7 +56,7 @@ const Icons = {
     )
 };
 
-// Status badge color helper
+
 const getBadgeClasses = (status) => {
     switch (status) {
         case 'active':
@@ -131,7 +131,7 @@ function MyBookings() {
                 return;
             }
 
-            // Usuń zakończone ('completed') oraz wszystkie anulowane ('cancelled') przy ładowaniu/odświeżeniu strony
+            
             const visibleBookings = data.filter(
                 (item) => item.status !== 'completed' && item.status !== 'cancelled'
             );
@@ -163,7 +163,7 @@ function MyBookings() {
             if (!response.ok) {
                 throw new Error(data.message || 'Failed to return vehicle.');
             }
-            // Zakończone wypożyczenie usuwamy od razu z widoku
+            
             setBookings((prev) => {
                 if (!prev) return null;
                 const remaining = prev.filter((b) => getBookingId(b) !== String(bookingId));
@@ -193,7 +193,7 @@ function MyBookings() {
                 throw new Error(data.message || 'Failed to cancel reservation.');
             }
 
-            // Zostaw pozycję na ekranie — zniknie dopiero po odświeżeniu strony
+            
             setBookings((prev) => {
                 if (!prev) return null;
                 return prev.map((b) =>
