@@ -131,17 +131,25 @@ router.delete("/me", authMiddleware, async (req, res) => {
             });
         }
 
-        // Delete the account first: if this fails, the booking history stays intact.
-        // Orphaned bookings are a smaller problem than an existing account without history.
+        // Delete the account first: if this fails, the booking history stays intact
         await User.deleteOne({ _id: user._id });
-        await Booking.deleteMany({ userId: user._id });
 
+        // The account is gone, so the session must end no matter what happens next.
         // Same options as POST /api/auth/logout, otherwise the cookie is not removed
         res.clearCookie("token", {
             httpOnly: true,
             sameSite: "lax",
             secure: process.env.NODE_ENV === "production"
         });
+
+        // MongoDB has no cascade delete, so remove the booking history explicitly.
+        // A failure here should not turn a successful account deletion into an error:
+        // log it, the orphaned bookings can be cleaned up later
+        try {
+            await Booking.deleteMany({ userId: user._id });
+        } catch (bookingError) {
+            console.error("Failed to delete bookings of deleted user", user._id, bookingError);
+        }
 
         return res.json({ message: "Account deleted." });
     } catch (error) {

@@ -310,9 +310,13 @@ function Settings({ user, setUser }) {
                             </div>
 
                             <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
+                                {/* Always in the DOM, so screen readers announce text changes */}
+                                <p className="sr-only" role="status">
+                                    {accountFeedback?.text}
+                                </p>
                                 {accountFeedback && (
                                     <p
-                                        role={accountFeedback.type === 'error' ? 'alert' : 'status'}
+                                        aria-hidden="true"
                                         className={`text-sm ${accountFeedback.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}
                                     >
                                         {accountFeedback.text}
@@ -371,9 +375,13 @@ function Settings({ user, setUser }) {
                             </div>
 
                             <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
+                                {/* Always in the DOM, so screen readers announce text changes */}
+                                <p className="sr-only" role="status">
+                                    {passwordFeedback?.text}
+                                </p>
                                 {passwordFeedback && (
                                     <p
-                                        role={passwordFeedback.type === 'error' ? 'alert' : 'status'}
+                                        aria-hidden="true"
                                         className={`text-sm ${passwordFeedback.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}
                                     >
                                         {passwordFeedback.text}
@@ -400,13 +408,17 @@ function Settings({ user, setUser }) {
                         danger
                     >
                         <div className="mt-6">
+                            {/* Always in the DOM, so screen readers announce the error */}
+                            <p className="sr-only" role="alert">
+                                {deleteError}
+                            </p>
                             {isDeleteConfirmOpen ? (
                                 <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-4">
                                     <p className="text-sm text-red-200">
                                         Are you sure? This action cannot be undone.
                                     </p>
                                     {deleteError && (
-                                        <p role="alert" className="mt-2 text-sm font-medium text-red-300">
+                                        <p aria-hidden="true" className="mt-2 text-sm font-medium text-red-300">
                                             {deleteError}
                                         </p>
                                     )}
