@@ -1,10 +1,9 @@
 const express = require("express");
 const User = require("../models/User");
 const authMiddleware = require("../middleware/auth");
+const { EMAIL_REGEX } = require("../utils/validation");
 
 const router = express.Router();
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // PATCH /api/users/me - Update the logged-in user's name and email
 router.patch("/me", authMiddleware, async (req, res) => {
