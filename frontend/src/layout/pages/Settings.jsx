@@ -136,11 +136,31 @@ function Settings({ user, setUser }) {
     // DELETE ACCOUNT
     // Two-step confirmation to prevent deleting the account by accident
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+    const [deleteError, setDeleteError] = useState(null);
 
-    function handleDeleteAccount() {
-        // TODO: send to backend (DELETE /api/users/me), then log out
-        console.log('Delete account confirmed');
-        setIsDeleteConfirmOpen(false);
+    async function handleDeleteAccount() {
+        setDeleteError(null);
+        setIsDeletingAccount(true);
+
+        try {
+            const res = await fetch('/api/users/me', { method: 'DELETE' });
+            const data = await res.json();
+
+            if (!res.ok) {
+                // e.g. 409 active bookings, 403 last admin
+                setDeleteError(data.message);
+                return;
+            }
+
+            // The account is gone and the server cleared the cookie.
+            // Without a user, the /settings route in App.jsx redirects to /login.
+            setUser(null);
+        } catch {
+            setDeleteError('Could not connect to the server.');
+        } finally {
+            setIsDeletingAccount(false);
+        }
     }
 
     return (
@@ -354,11 +374,19 @@ function Settings({ user, setUser }) {
                                     <p className="text-sm text-red-200">
                                         Are you sure? This action cannot be undone.
                                     </p>
+                                    {deleteError && (
+                                        <p role="alert" className="mt-2 text-sm font-medium text-red-300">
+                                            {deleteError}
+                                        </p>
+                                    )}
                                     {/* flex-col-reverse: destructive button on top on mobile, on the right on desktop */}
                                     <div className="mt-4 flex flex-col-reverse gap-3 md:flex-row md:justify-end">
                                         <button
                                             type="button"
-                                            onClick={() => setIsDeleteConfirmOpen(false)}
+                                            onClick={() => {
+                                                setIsDeleteConfirmOpen(false);
+                                                setDeleteError(null);
+                                            }}
                                             className="rounded-lg border border-white/10 px-5 py-2.5 text-sm font-semibold text-slate-300 hover:border-white/20 hover:text-white"
                                         >
                                             Cancel
@@ -366,9 +394,10 @@ function Settings({ user, setUser }) {
                                         <button
                                             type="button"
                                             onClick={handleDeleteAccount}
-                                            className="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
+                                            disabled={isDeletingAccount}
+                                            className="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
                                         >
-                                            Yes, delete my account
+                                            {isDeletingAccount ? 'Deleting…' : 'Yes, delete my account'}
                                         </button>
                                     </div>
                                 </div>
