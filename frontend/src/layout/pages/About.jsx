@@ -43,7 +43,7 @@ const SITE_SECTIONS = [
         path: '/fleet',
         access: 'Public',
         accessStyle: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-        location: 'Top navigation bar ("Our fleet")',
+        location: 'Top navigation bar ("Our fleet") or the "Book now" button in the header',
         description:
             'Catalog of available cars where you can browse models, compare vehicle categories, and pick the right car for your trip.',
     },
@@ -64,15 +64,6 @@ const SITE_SECTIONS = [
         location: 'Top navigation bar ("Contact")',
         description:
             'Customer support information and ways to reach the Cars-rent.pl team if you have questions or need help with a rental.',
-    },
-    {
-        name: 'Booking',
-        path: '/booking',
-        access: 'Sign in required',
-        accessStyle: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
-        location: 'Top-right header ("Book now" button)',
-        description:
-            'Dedicated reservation page for selecting your rental timeframe, confirming vehicle details, and placing a new booking.',
     },
     {
         name: 'My bookings',
@@ -98,7 +89,7 @@ const SITE_SECTIONS = [
 const FAQ_ITEMS = [
     {
         question: 'Do I need an account to browse Cars-rent.pl?',
-        answer: 'No. You can freely view Our fleet, About / How it works, and Contact without signing in. An account is required to access the Home page, place a reservation on Booking, and check My bookings.',
+        answer: 'No. You can freely view Our fleet, About / How it works, and Contact without signing in. An account is required to access the Home page, book a car from Our fleet, and check My bookings.',
     },
     {
         question: 'Where can I find my reservations?',
@@ -106,7 +97,7 @@ const FAQ_ITEMS = [
     },
     {
         question: 'How do I start a new car booking?',
-        answer: 'Sign in to your account and click the blue "Book now" button in the top-right corner of the header. This takes you directly to the Booking page (/booking).',
+        answer: 'Sign in to your account and click the blue "Book now" button in the top-right corner of the header. This takes you to Our fleet (/fleet), where you can pick an available car and click "Book".',
     },
     {
         question: 'How do I create an account or log out?',
