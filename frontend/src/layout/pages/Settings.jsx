@@ -52,7 +52,7 @@ function Settings({ user }) {
                 </nav>
 
                 {/* Settings sections */}
-                <div className="mt-6 flex flex-col gap-4 md:gap-6">
+                <div className="mt-6 flex flex-col gap-4 md:gap-6 lg:mt-0">
                     {/* Appearance */}
                     <section id="appearance" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
                         <div className="flex items-center gap-4">
@@ -75,6 +75,32 @@ function Settings({ user }) {
                             <div>
                                 <h2 className="text-lg font-semibold text-white md:text-xl">Account</h2>
                                 <p className="text-sm text-slate-400">Your name and email are used for bookings and confirmations.</p>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 grid gap-4 md:grid-cols-2">
+                            <div>
+                                <label htmlFor="account-name" className="mb-1.5 block text-sm font-medium text-slate-300">
+                                    First name
+                                </label>
+                                <input
+                                    id="account-name"
+                                    type="text"
+                                    defaultValue={user?.imie}
+                                    className="w-full rounded-lg border border-white/10 bg-[#0f1729] px-4 py-2.5 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="account-email" className="mb-1.5 block text-sm font-medium text-slate-300">
+                                    Email
+                                </label>
+                                <input
+                                    id="account-email"
+                                    type="email"
+                                    defaultValue={user?.email}
+                                    className="w-full rounded-lg border border-white/10 bg-[#0f1729] px-4 py-2.5 text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+                                />
                             </div>
                         </div>
                     </section>
