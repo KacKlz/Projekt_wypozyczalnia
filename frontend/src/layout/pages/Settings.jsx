@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Sun, User, Lock, TriangleAlert } from 'lucide-react';
-import { validateEmail, validateName } from '../../validation';
+import { validateEmail, validateName, validatePassword, validatePasswordMatch } from '../../validation';
+
 
 function Settings({ user }) {
     const userName = user?.imie || 'User';
@@ -34,9 +35,23 @@ function Settings({ user }) {
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [passwordErrors, setPasswordErrors] = useState({});
 
     function handlePasswordSubmit(event) {
         event.preventDefault();
+
+        const errors = {
+            currentPassword: currentPassword ? null : 'Current password is required.',
+            newPassword:
+                validatePassword(newPassword) ||
+                (newPassword === currentPassword ? 'New password must be different from the current one.' : null),
+            confirmPassword: validatePasswordMatch(newPassword, confirmPassword),
+        };
+        setPasswordErrors(errors);
+
+        if (errors.currentPassword || errors.newPassword || errors.confirmPassword) {
+            return;
+        }
 
         console.log('Password form submitted');
 
@@ -194,8 +209,15 @@ function Settings({ user }) {
                                         autoComplete="current-password"
                                         value={currentPassword}
                                         onChange={(event) => setCurrentPassword(event.target.value)}
-                                        className={`${inputClass} border-white/10 focus:border-blue-500`}
+                                        aria-invalid={Boolean(passwordErrors.currentPassword)}
+                                        aria-describedby={passwordErrors.currentPassword ? 'current-password-error' : undefined}
+                                        className={`${inputClass} ${passwordErrors.currentPassword ? 'border-red-500' : 'border-white/10 focus:border-blue-500'}`}
                                     />
+                                    {passwordErrors.currentPassword && (
+                                        <p id="current-password-error" className="mt-1.5 text-sm text-red-400">
+                                            {passwordErrors.currentPassword}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
@@ -208,8 +230,15 @@ function Settings({ user }) {
                                         autoComplete="new-password"
                                         value={newPassword}
                                         onChange={(event) => setNewPassword(event.target.value)}
-                                        className={`${inputClass} border-white/10 focus:border-blue-500`}
+                                        aria-invalid={Boolean(passwordErrors.newPassword)}
+                                        aria-describedby={passwordErrors.newPassword ? 'new-password-error' : undefined}
+                                        className={`${inputClass} ${passwordErrors.newPassword ? 'border-red-500' : 'border-white/10 focus:border-blue-500'}`}
                                     />
+                                    {passwordErrors.newPassword && (
+                                        <p id="new-password-error" className="mt-1.5 text-sm text-red-400">
+                                            {passwordErrors.newPassword}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
@@ -222,8 +251,15 @@ function Settings({ user }) {
                                         autoComplete="new-password"
                                         value={confirmPassword}
                                         onChange={(event) => setConfirmPassword(event.target.value)}
-                                        className={`${inputClass} border-white/10 focus:border-blue-500`}
+                                        aria-invalid={Boolean(passwordErrors.confirmPassword)}
+                                        aria-describedby={passwordErrors.confirmPassword ? 'confirm-password-error' : undefined}
+                                        className={`${inputClass} ${passwordErrors.confirmPassword ? 'border-red-500' : 'border-white/10 focus:border-blue-500'}`}
                                     />
+                                    {passwordErrors.confirmPassword && (
+                                        <p id="confirm-password-error" className="mt-1.5 text-sm text-red-400">
+                                            {passwordErrors.confirmPassword}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
