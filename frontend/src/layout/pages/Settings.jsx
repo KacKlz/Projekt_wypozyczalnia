@@ -4,6 +4,9 @@ function Settings({ user }) {
     const userName = user?.imie || 'User';
     const userInitial = userName.charAt(0).toUpperCase();
 
+    const navLinkClass =
+        'flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-[#151e32] px-4 py-2 text-sm font-medium text-slate-300 hover:border-white/20 hover:text-white';
+
     return (
         <main className="mx-auto w-full max-w-(--content-width) px-4 py-8 md:px-10 md:py-12">
             <h1 className="mb-2 text-3xl font-bold text-white md:text-4xl">Settings</h1>
@@ -25,10 +28,30 @@ function Settings({ user }) {
                 </div>
             </section>
 
+            {/* Section navigation */}
+            <nav aria-label="Settings sections" className="mt-6 flex gap-2 overflow-x-auto pb-1">
+                <a href="#appearance" className={navLinkClass}>
+                    <Sun className="size-4" aria-hidden="true" />
+                    Appearance
+                </a>
+                <a href="#account" className={navLinkClass}>
+                    <User className="size-4" aria-hidden="true" />
+                    Account
+                </a>
+                <a href="#password" className={navLinkClass}>
+                    <Lock className="size-4" aria-hidden="true" />
+                    Password
+                </a>
+                <a href="#delete-account" className={navLinkClass}>
+                    <TriangleAlert className="size-4" aria-hidden="true" />
+                    Delete
+                </a>
+            </nav>
+
             {/* Settings sections */}
             <div className="mt-6 flex flex-col gap-4 md:gap-6">
                 {/* Appearance */}
-                <section className="rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
+                <section id="appearance" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
                     <div className="flex items-center gap-4">
                         <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/15">
                             <Sun className="size-5 text-blue-400" aria-hidden="true" />
@@ -41,7 +64,7 @@ function Settings({ user }) {
                 </section>
 
                 {/* Account */}
-                <section className="rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
+                <section id="account" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
                     <div className="flex items-center gap-4">
                         <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-purple-500/15">
                             <User className="size-5 text-purple-400" aria-hidden="true" />
@@ -54,7 +77,7 @@ function Settings({ user }) {
                 </section>
 
                 {/* Change password */}
-                <section className="rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
+                <section id="password" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#151e32] p-5 md:p-8">
                     <div className="flex items-center gap-4">
                         <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15">
                             <Lock className="size-5 text-emerald-400" aria-hidden="true" />
@@ -67,7 +90,7 @@ function Settings({ user }) {
                 </section>
 
                 {/* Delete account */}
-                <section className="rounded-xl border border-red-500/40 bg-red-500/5 p-5 md:p-8">
+                <section id="delete-account" className="scroll-mt-24 rounded-xl border border-red-500/40 bg-red-500/5 p-5 md:p-8">
                     <div className="flex items-center gap-4">
                         <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-red-500/15">
                             <TriangleAlert className="size-5 text-red-400" aria-hidden="true" />
