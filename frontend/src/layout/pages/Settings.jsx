@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Sun, Moon, Monitor, User, Lock, TriangleAlert } from 'lucide-react';
 import { validateEmail, validateName, validatePassword, validatePasswordMatch } from '../../validation';
 import SettingsCard from '../settings/SettingsCard';
+import FormField from '../settings/FormField';
 
 // Static list, defined outside the component so it is not recreated on every render
 const themeOptions = [
@@ -16,10 +17,6 @@ function Settings({ user }) {
 
     const navLinkClass =
         'flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-[#151e32] px-4 py-2 text-sm font-medium text-slate-300 hover:border-white/20 hover:text-white lg:rounded-xl';
-
-    // Shared input styles without border color (border color depends on validation state)
-    const inputClass =
-        'w-full rounded-lg border bg-[#0f1729] px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none';
 
     // APPEARANCE
     // UI only for now, applying the theme will be handled in feature/theme
@@ -188,45 +185,22 @@ function Settings({ user }) {
                         {/* noValidate: use our own error messages instead of the browser's popups */}
                         <form onSubmit={handleAccountSubmit} noValidate className="mt-6">
                             <div className="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <label htmlFor="account-name" className="mb-1.5 block text-sm font-medium text-slate-300">
-                                        First name
-                                    </label>
-                                    <input
-                                        id="account-name"
-                                        type="text"
-                                        value={name}
-                                        onChange={(event) => setName(event.target.value)}
-                                        aria-invalid={Boolean(accountErrors.name)}
-                                        aria-describedby={accountErrors.name ? 'account-name-error' : undefined}
-                                        className={`${inputClass} ${accountErrors.name ? 'border-red-500' : 'border-white/10 focus:border-blue-500'}`}
-                                    />
-                                    {accountErrors.name && (
-                                        <p id="account-name-error" className="mt-1.5 text-sm text-red-400">
-                                            {accountErrors.name}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label htmlFor="account-email" className="mb-1.5 block text-sm font-medium text-slate-300">
-                                        Email
-                                    </label>
-                                    <input
-                                        id="account-email"
-                                        type="email"
-                                        value={email}
-                                        onChange={(event) => setEmail(event.target.value)}
-                                        aria-invalid={Boolean(accountErrors.email)}
-                                        aria-describedby={accountErrors.email ? 'account-email-error' : undefined}
-                                        className={`${inputClass} ${accountErrors.email ? 'border-red-500' : 'border-white/10 focus:border-blue-500'}`}
-                                    />
-                                    {accountErrors.email && (
-                                        <p id="account-email-error" className="mt-1.5 text-sm text-red-400">
-                                            {accountErrors.email}
-                                        </p>
-                                    )}
-                                </div>
+                                <FormField
+                                    id="account-name"
+                                    label="First name"
+                                    type="text"
+                                    value={name}
+                                    onChange={(event) => setName(event.target.value)}
+                                    error={accountErrors.name}
+                                />
+                                <FormField
+                                    id="account-email"
+                                    label="Email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(event) => setEmail(event.target.value)}
+                                    error={accountErrors.email}
+                                />
                             </div>
 
                             <div className="mt-6 flex justify-end">
@@ -250,69 +224,35 @@ function Settings({ user }) {
                     >
                         <form onSubmit={handlePasswordSubmit} noValidate className="mt-6">
                             <div className="grid gap-4 md:grid-cols-2">
-                                <div className="md:col-span-2">
-                                    <label htmlFor="current-password" className="mb-1.5 block text-sm font-medium text-slate-300">
-                                        Current password
-                                    </label>
-                                    {/* autoComplete helps password managers fill in or generate passwords */}
-                                    <input
-                                        id="current-password"
-                                        type="password"
-                                        autoComplete="current-password"
-                                        value={currentPassword}
-                                        onChange={(event) => setCurrentPassword(event.target.value)}
-                                        aria-invalid={Boolean(passwordErrors.currentPassword)}
-                                        aria-describedby={passwordErrors.currentPassword ? 'current-password-error' : undefined}
-                                        className={`${inputClass} ${passwordErrors.currentPassword ? 'border-red-500' : 'border-white/10 focus:border-blue-500'}`}
-                                    />
-                                    {passwordErrors.currentPassword && (
-                                        <p id="current-password-error" className="mt-1.5 text-sm text-red-400">
-                                            {passwordErrors.currentPassword}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label htmlFor="new-password" className="mb-1.5 block text-sm font-medium text-slate-300">
-                                        New password
-                                    </label>
-                                    <input
-                                        id="new-password"
-                                        type="password"
-                                        autoComplete="new-password"
-                                        value={newPassword}
-                                        onChange={(event) => setNewPassword(event.target.value)}
-                                        aria-invalid={Boolean(passwordErrors.newPassword)}
-                                        aria-describedby={passwordErrors.newPassword ? 'new-password-error' : undefined}
-                                        className={`${inputClass} ${passwordErrors.newPassword ? 'border-red-500' : 'border-white/10 focus:border-blue-500'}`}
-                                    />
-                                    {passwordErrors.newPassword && (
-                                        <p id="new-password-error" className="mt-1.5 text-sm text-red-400">
-                                            {passwordErrors.newPassword}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label htmlFor="confirm-password" className="mb-1.5 block text-sm font-medium text-slate-300">
-                                        Confirm new password
-                                    </label>
-                                    <input
-                                        id="confirm-password"
-                                        type="password"
-                                        autoComplete="new-password"
-                                        value={confirmPassword}
-                                        onChange={(event) => setConfirmPassword(event.target.value)}
-                                        aria-invalid={Boolean(passwordErrors.confirmPassword)}
-                                        aria-describedby={passwordErrors.confirmPassword ? 'confirm-password-error' : undefined}
-                                        className={`${inputClass} ${passwordErrors.confirmPassword ? 'border-red-500' : 'border-white/10 focus:border-blue-500'}`}
-                                    />
-                                    {passwordErrors.confirmPassword && (
-                                        <p id="confirm-password-error" className="mt-1.5 text-sm text-red-400">
-                                            {passwordErrors.confirmPassword}
-                                        </p>
-                                    )}
-                                </div>
+                                {/* autoComplete helps password managers fill in or generate passwords */}
+                                <FormField
+                                    id="current-password"
+                                    label="Current password"
+                                    type="password"
+                                    autoComplete="current-password"
+                                    value={currentPassword}
+                                    onChange={(event) => setCurrentPassword(event.target.value)}
+                                    error={passwordErrors.currentPassword}
+                                    className="md:col-span-2"
+                                />
+                                <FormField
+                                    id="new-password"
+                                    label="New password"
+                                    type="password"
+                                    autoComplete="new-password"
+                                    value={newPassword}
+                                    onChange={(event) => setNewPassword(event.target.value)}
+                                    error={passwordErrors.newPassword}
+                                />
+                                <FormField
+                                    id="confirm-password"
+                                    label="Confirm new password"
+                                    type="password"
+                                    autoComplete="new-password"
+                                    value={confirmPassword}
+                                    onChange={(event) => setConfirmPassword(event.target.value)}
+                                    error={passwordErrors.confirmPassword}
+                                />
                             </div>
 
                             <div className="mt-6 flex justify-end">
