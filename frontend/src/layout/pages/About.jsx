@@ -222,7 +222,7 @@ function About() {
                             Explore fleet
                         </Link>
                         <Link
-                            to="/booking"
+                            to="/fleet"
                             className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500"
                         >
                             Book now

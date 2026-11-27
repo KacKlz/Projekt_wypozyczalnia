@@ -1,12 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
 
 const API_URL = 'http://localhost:3001/api/vehicles';
 const ITEMS_PER_PAGE = 6;
 
 function Fleet() {
-    const navigate = useNavigate();
-
     const [sortBy, setSortBy] = useState('price-asc');
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -129,7 +126,11 @@ function Fleet() {
                     <div className="flex flex-wrap gap-3 pt-2">
                         <button
                             type="button"
-                            onClick={() => navigate('/booking')}
+                            onClick={() =>
+                                document
+                                    .getElementById('fleet-section')
+                                    ?.scrollIntoView({ behavior: 'smooth' })
+                            }
                             className="cursor-pointer rounded-xl bg-blue-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-400"
                         >
                             Book Now
