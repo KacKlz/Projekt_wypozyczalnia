@@ -1,5 +1,5 @@
-import { Sun, User, Lock, TriangleAlert } from 'lucide-react';
 import { useState } from 'react';
+import { Sun, User, Lock, TriangleAlert } from 'lucide-react';
 import { validateEmail, validateName } from '../../validation';
 
 function Settings({ user }) {
@@ -13,6 +13,7 @@ function Settings({ user }) {
     const [email, setEmail] = useState(user?.email || '');
     const [accountErrors, setAccountErrors] = useState({});
 
+    // ACCOUNT
     function handleAccountSubmit(event) {
         event.preventDefault();
 
@@ -27,6 +28,21 @@ function Settings({ user }) {
         }
 
         console.log('Account data:', { name, email });
+    }
+
+    // PASSWORD
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+
+    function handlePasswordSubmit(event) {
+        event.preventDefault();
+
+        console.log('Password form submitted');
+
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
     }
 
     return (
@@ -162,9 +178,64 @@ function Settings({ user }) {
                             </span>
                             <div>
                                 <h2 className="text-lg font-semibold text-white md:text-xl">Change password</h2>
-                                <p className="text-sm text-slate-400">Use at least 8 characters, including a number.</p>
+                                <p className="text-sm text-slate-400">At least 8 characters, one uppercase letter and one special character.</p>
                             </div>
                         </div>
+
+                        <form onSubmit={handlePasswordSubmit} noValidate className="mt-6">
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div className="md:col-span-2">
+                                    <label htmlFor="current-password" className="mb-1.5 block text-sm font-medium text-slate-300">
+                                        Current password
+                                    </label>
+                                    <input
+                                        id="current-password"
+                                        type="password"
+                                        autoComplete="current-password"
+                                        value={currentPassword}
+                                        onChange={(event) => setCurrentPassword(event.target.value)}
+                                        className={`${inputClass} border-white/10 focus:border-blue-500`}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="new-password" className="mb-1.5 block text-sm font-medium text-slate-300">
+                                        New password
+                                    </label>
+                                    <input
+                                        id="new-password"
+                                        type="password"
+                                        autoComplete="new-password"
+                                        value={newPassword}
+                                        onChange={(event) => setNewPassword(event.target.value)}
+                                        className={`${inputClass} border-white/10 focus:border-blue-500`}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="confirm-password" className="mb-1.5 block text-sm font-medium text-slate-300">
+                                        Confirm new password
+                                    </label>
+                                    <input
+                                        id="confirm-password"
+                                        type="password"
+                                        autoComplete="new-password"
+                                        value={confirmPassword}
+                                        onChange={(event) => setConfirmPassword(event.target.value)}
+                                        className={`${inputClass} border-white/10 focus:border-blue-500`}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="mt-6 flex justify-end">
+                                <button
+                                    type="submit"
+                                    className="w-full rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-600 md:w-auto"
+                                >
+                                    Update password
+                                </button>
+                            </div>
+                        </form>
                     </section>
 
                     {/* Delete account */}

@@ -14,8 +14,12 @@ export const validatePasswordMatch = (password, repeatPassword) => {
     return null;
 };
 
-// Validate password security requirements (uppercase letter and special character)
+// Validate password security requirements (min. 8 characters, uppercase letter and special character)
 export const validatePassword = (password) => {
+    if (!password || password.length < 8) {
+        return 'Password must be at least 8 characters long!';
+    }
+
     const hasUppercase = /[A-Z]/.test(password);
     const hasSpecialChar = /[^a-zA-Z0-9]/.test(password);
 
