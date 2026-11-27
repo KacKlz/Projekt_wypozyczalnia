@@ -1,6 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
+const Booking = require("../models/Booking");
 const authMiddleware = require("../middleware/auth");
 const { EMAIL_REGEX, validatePassword } = require("../utils/validation");
 
@@ -92,6 +93,56 @@ router.patch("/me/password", authMiddleware, async (req, res) => {
         return res.json({ message: "Password updated." });
     } catch (error) {
         console.error("PATCH /api/users/me/password error:", error);
+        return res.status(500).json({ message: "Server error." });
+    }
+});
+
+// DELETE /api/users/me - Delete the logged-in user's account
+router.delete("/me", authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.userId);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // There must always be at least one admin in the system
+        if (user.role === "admin") {
+            const adminCount = await User.countDocuments({ role: "admin" });
+
+            if (adminCount <= 1) {
+                return res.status(403).json({
+                    message: "You are the only admin. Add another admin before deleting this account."
+                });
+            }
+        }
+
+        // Do not delete an account during an ongoing or upcoming rental
+        const hasActiveBookings = await Booking.exists({
+            userId: user._id,
+            status: { $in: ["active", "upcoming"] }
+        });
+
+        if (hasActiveBookings) {
+            return res.status(409).json({
+                message: "Cancel or return your active bookings before deleting your account."
+            });
+        }
+
+        // MongoDB has no cascade delete, so remove the booking history explicitly
+        await Booking.deleteMany({ userId: user._id });
+        await User.deleteOne({ _id: user._id });
+
+        // Same options as POST /api/auth/logout, otherwise the cookie is not removed
+        res.clearCookie("token", {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production"
+        });
+
+        return res.json({ message: "Account deleted." });
+    } catch (error) {
+        console.error("DELETE /api/users/me error:", error);
         return res.status(500).json({ message: "Server error." });
     }
 });
