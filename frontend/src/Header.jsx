@@ -123,7 +123,7 @@ function Header({ user, onLogout }) {
 
             {user && (
                 <div className="header-actions">
-                    <Link to="/booking" className="btn-header" onClick={closeNav}>
+                    <Link to="/fleet" className="btn-header" onClick={closeNav}>
                         Book now
                     </Link>
                     <UserMenu user={user} onLogout={onLogout} />

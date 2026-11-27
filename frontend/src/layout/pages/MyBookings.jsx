@@ -646,7 +646,7 @@ function MyBookings() {
                     </p>
                     <div>
                         <Link
-                            to="/booking"
+                            to="/fleet"
                             className="inline-block px-6 py-3 rounded-xl bg-blue-500 text-white text-sm font-bold hover:bg-blue-600 transition-colors no-underline shadow-lg shadow-blue-500/25"
                         >
                             Book a car now
